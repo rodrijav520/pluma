@@ -15,59 +15,65 @@
     --marigold: #f2a93b;
   }
   * { box-sizing: border-box; }
+  html, body { height: 100%; }
   body {
     margin: 0;
-    min-height: 100vh;
     background: radial-gradient(1200px 700px at 20% -10%, #232735, var(--fondo));
     color: var(--texto);
     font: 15px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    padding: 28px 20px 48px;
-    gap: 22px;
+    overflow: hidden;
   }
-  header { text-align: center; max-width: 640px; }
-  h1 { margin: 0 0 6px; font-size: 22px; letter-spacing: -0.3px; }
-  .sub { margin: 0; color: var(--tenue); font-size: 14px; }
 
-  .credenciales {
-    display: inline-flex; flex-wrap: wrap; gap: 8px; justify-content: center;
-    margin-top: 12px;
+  header {
+    flex: 0 0 auto;
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--linea);
   }
+  h1 { margin: 0; font-size: 15px; letter-spacing: -0.2px; white-space: nowrap; }
   .chip {
     background: var(--fondo2); border: 1px solid var(--linea);
-    border-radius: 999px; padding: 5px 12px; font-size: 12.5px;
+    border-radius: 999px; padding: 4px 11px; font-size: 12px;
     font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
-    color: var(--texto);
   }
   .chip b { color: var(--marigold); font-weight: 600; }
+  .crece { flex: 1 1 auto; }
 
-  nav { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 720px; }
+  nav {
+    flex: 0 0 auto;
+    display: flex; gap: 6px; padding: 10px 18px;
+    overflow-x: auto; scrollbar-width: thin;
+    border-bottom: 1px solid var(--linea);
+  }
   nav button {
     background: var(--fondo2); color: var(--texto);
     border: 1px solid var(--linea); border-radius: 999px;
-    padding: 8px 15px; font-size: 13px; cursor: pointer;
-    transition: background .15s, border-color .15s, transform .1s;
+    padding: 6px 13px; font-size: 12.5px; cursor: pointer; white-space: nowrap;
+    transition: background .15s, border-color .15s;
   }
-  nav button:hover { background: #262a35; border-color: rgba(255,255,255,0.22); }
-  nav button:active { transform: scale(0.97); }
+  nav button:hover { background: #262a35; }
   nav button[aria-current="true"] { background: var(--tinta); border-color: var(--tinta); color: #fff; }
 
-  .escena { display: flex; align-items: flex-start; gap: 26px; flex-wrap: wrap; justify-content: center; }
+  /* Escenario: el teléfono se escala para caber SIEMPRE, sin importar el zoom
+     del navegador ni el tamaño de la ventana. */
+  .escena {
+    flex: 1 1 auto;
+    display: grid;
+    place-items: center;
+    min-height: 0;
+    padding: 14px;
+  }
+  .encaje { transform-origin: center center; }
 
-  /* Marco de teléfono: 375×812 (iPhone X/11/12/13/14) */
   .telefono {
     position: relative;
     width: 401px; height: 838px;
     background: #0a0b0e;
     border-radius: 54px;
     padding: 13px;
-    box-shadow:
-      0 0 0 2px #2a2e39,
-      0 40px 80px rgba(0,0,0,0.55),
-      inset 0 0 0 1px rgba(255,255,255,0.06);
-    flex: 0 0 auto;
+    box-shadow: 0 0 0 2px #2a2e39, 0 30px 70px rgba(0,0,0,0.55);
   }
   .pantalla {
     position: relative;
@@ -77,85 +83,66 @@
     background: #f2f4f7;
   }
   .pantalla iframe { width: 375px; height: 812px; border: 0; display: block; }
-
-  /* Muesca */
   .muesca {
     position: absolute; top: 0; left: 50%; transform: translateX(-50%);
     width: 148px; height: 27px; background: #0a0b0e;
     border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;
     z-index: 5; pointer-events: none;
   }
-  /* Barra de gestos */
   .gesto {
     position: absolute; bottom: 7px; left: 50%; transform: translateX(-50%);
     width: 128px; height: 4px; border-radius: 2px;
     background: rgba(20,24,33,0.28); z-index: 5; pointer-events: none;
   }
 
-  .lateral { max-width: 260px; font-size: 13.5px; color: var(--tenue); }
-  .lateral h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--texto); margin: 0 0 10px; }
-  .lateral ol { margin: 0; padding-left: 18px; }
-  .lateral li { margin-bottom: 9px; }
-  .lateral code {
-    background: var(--fondo2); border: 1px solid var(--linea);
-    border-radius: 5px; padding: 1px 5px; font-size: 12.5px;
+  .pie {
+    flex: 0 0 auto;
+    padding: 8px 18px 12px;
+    font-size: 12px; color: var(--tenue);
+    display: flex; gap: 14px; align-items: center; flex-wrap: wrap;
+    border-top: 1px solid var(--linea);
   }
-  .aviso {
-    margin-top: 16px; padding: 11px 13px;
-    background: rgba(242,169,59,0.10); border: 1px solid rgba(242,169,59,0.32);
-    border-radius: 10px; color: #f0d9ae; font-size: 12.5px;
-  }
+  .escala { font-family: ui-monospace, Consolas, monospace; color: var(--texto); }
   .caido {
-    display: none; padding: 14px 16px; border-radius: 12px;
-    background: rgba(214,69,96,0.12); border: 1px solid rgba(214,69,96,0.4);
-    color: #f3c2cb; max-width: 560px; text-align: center; font-size: 13.5px;
+    display: none; margin-left: auto;
+    color: #f3c2cb;
   }
-  .caido code { background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 5px; }
 </style>
 </head>
 <body>
 
 <header>
   <h1>Pluma — simulador móvil</h1>
-  <p class="sub">La app real corriendo en <code>localhost:8081</code>, dentro de una pantalla de 375×812.</p>
-  <div class="credenciales">
-    <span class="chip">correo <b>ana@demo.gt</b></span>
-    <span class="chip">contraseña <b>Quetzal2026seguro</b></span>
-  </div>
+  <span class="chip">correo <b>ana@demo.gt</b></span>
+  <span class="chip">clave <b>Quetzal2026seguro</b></span>
+  <span class="crece"></span>
+  <span class="chip" id="estado">conectando…</span>
 </header>
-
-<div class="caido" id="caido">
-  No se pudo cargar <code>http://localhost:8081</code>. Levantá el servidor con
-  <code>npx expo start</code> en la carpeta del proyecto y recargá esta página.
-</div>
 
 <nav id="rutas"></nav>
 
 <div class="escena">
-  <div class="telefono">
-    <div class="muesca"></div>
-    <div class="pantalla">
-      <iframe id="app" src="http://localhost:8081/bienvenida" title="Pluma"></iframe>
+  <div class="encaje" id="encaje">
+    <div class="telefono">
+      <div class="muesca"></div>
+      <div class="pantalla">
+        <iframe id="app" src="http://localhost:8081/bienvenida" title="Pluma"></iframe>
+      </div>
+      <div class="gesto"></div>
     </div>
-    <div class="gesto"></div>
   </div>
+</div>
 
-  <aside class="lateral">
-    <h2>Cómo recorrerla</h2>
-    <ol>
-      <li>Empezá en <b>Bienvenida</b> y entrá con las credenciales de arriba.</li>
-      <li><b>Inicio</b> muestra el saldo en las dos monedas con la tasa en vivo del backend.</li>
-      <li><b>Cambiar</b> tiene la pieza firma: deslizá la pluma para confirmar.</li>
-      <li><b>Actividad</b> lista los movimientos con las dos monedas en cada fila.</li>
-    </ol>
-    <div class="aviso">
-      Comprar, cambiar y enviar devuelven un error claro: la wallet de tesorería
-      todavía no tiene fondos de testnet. El saldo del usuario nunca se mueve.
-    </div>
-  </aside>
+<div class="pie">
+  <span>Pantalla real de 375×812. Escala automática: <span class="escala" id="pct">100%</span></span>
+  <span>·</span>
+  <span>No hace falta el modo dispositivo del navegador. Si lo tenés activo, apagalo.</span>
+  <span class="caido" id="caido">No se pudo cargar localhost:8081 — levantá <code>npx expo start</code>.</span>
 </div>
 
 <script>
+  const BASE = 'http://localhost:8081';
+
   const RUTAS = [
     ['Bienvenida', '/bienvenida'],
     ['Crear cuenta', '/crear-cuenta'],
@@ -170,7 +157,6 @@
     ['Ajustes', '/ajustes'],
   ];
 
-  const BASE = 'http://localhost:8081';
   const nav = document.getElementById('rutas');
   const marco = document.getElementById('app');
 
@@ -186,10 +172,38 @@
     nav.appendChild(b);
   });
 
-  // Si el servidor no responde, decirlo en vez de mostrar un marco en blanco.
-  fetch(BASE, { mode: 'no-cors' }).catch(() => {
-    document.getElementById('caido').style.display = 'block';
-  });
+  /**
+   * Encaje automático.
+   *
+   * El teléfono mide 401×838 fijos. En vez de pedirle a la persona que ajuste
+   * el zoom del navegador, se escala para caber en el espacio disponible — así
+   * se ve completo con cualquier zoom, ventana o pantalla.
+   */
+  const ALTO = 838, ANCHO = 401;
+  const encaje = document.getElementById('encaje');
+  const escena = document.querySelector('.escena');
+  const pct = document.getElementById('pct');
+
+  function ajustar() {
+    const dispW = escena.clientWidth - 28;
+    const dispH = escena.clientHeight - 28;
+    // Nunca agranda por encima de 1: a tamaño real ya es fiel al teléfono.
+    const escala = Math.min(dispW / ANCHO, dispH / ALTO, 1);
+    encaje.style.transform = `scale(${escala})`;
+    pct.textContent = Math.round(escala * 100) + '%';
+  }
+
+  new ResizeObserver(ajustar).observe(escena);
+  window.addEventListener('resize', ajustar);
+  ajustar();
+
+  // Estado del servidor de la app.
+  fetch(BASE, { mode: 'no-cors' })
+    .then(() => { document.getElementById('estado').textContent = 'app conectada'; })
+    .catch(() => {
+      document.getElementById('estado').textContent = 'app caída';
+      document.getElementById('caido').style.display = 'block';
+    });
 </script>
 
 </body>

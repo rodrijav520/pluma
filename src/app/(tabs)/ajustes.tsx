@@ -1,8 +1,9 @@
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
-import { Copy, LogOut, ShieldCheck } from 'lucide-react-native';
+import { Copy, Fuel, LogOut, ShieldCheck } from 'lucide-react-native';
+import { consultarRed, formatoEth, GAS_INICIAL_ETH, type EstadoRed } from '../../core/red';
 import { Pantalla } from '../../ui/Pantalla';
 import { Hoja } from '../../ui/Hoja';
 import { T } from '../../ui/T';
@@ -57,6 +58,8 @@ export default function Ajustes() {
         </Presionable>
       ) : null}
 
+      <EstadoDeRed direccion={saldo?.direccionWallet} />
+
       <Hoja style={styles.bloque}>
         <View style={styles.filaTitulo}>
           <ShieldCheck size={18} color={color.tinta} strokeWidth={2} />
@@ -95,8 +98,92 @@ export default function Ajustes() {
   );
 }
 
+/**
+ * Gas disponible.
+ *
+ * El backend no expone este dato, así que se lee directo de la cadena. Es la
+ * única forma de que la persona entienda por qué una operación falla cuando su
+ * saldo está bien: sin ETH no se paga la comisión de la red, y nada se mueve.
+ */
+function EstadoDeRed({ direccion }: { direccion?: string }) {
+  const [red, setRed] = useState<EstadoRed | null>(null);
+  const [cargando, setCargando] = useState(false);
+  const [fallo, setFallo] = useState(false);
+
+  const consultar = useCallback(async () => {
+    if (!direccion) return;
+    setCargando(true);
+    setFallo(false);
+    try {
+      setRed(await consultarRed(direccion));
+    } catch {
+      setFallo(true);
+    } finally {
+      setCargando(false);
+    }
+  }, [direccion]);
+
+  useEffect(() => {
+    consultar();
+  }, [consultar]);
+
+  if (!direccion) return null;
+
+  const proporcion = red ? Math.min(red.eth / GAS_INICIAL_ETH, 1) : 0;
+  const tono = !red ? color.lapiz : red.puedeOperar ? color.entra : color.sale;
+
+  return (
+    <Hoja style={styles.bloque}>
+      <View style={styles.filaTitulo}>
+        <Fuel size={18} color={color.tinta} strokeWidth={2} />
+        <T v="cuerpoFuerte" style={{ flex: 1 }}>
+          Gas para operar
+        </T>
+        {cargando ? <ActivityIndicator size="small" color={color.tinta} /> : null}
+      </View>
+
+      {fallo ? (
+        <T v="small" color={color.espera}>
+          No se pudo leer la red. Tocá aquí para reintentar.
+        </T>
+      ) : red ? (
+        <>
+          <T v="datoDestacado">{formatoEth(red.eth)} ETH</T>
+
+          <View style={styles.barra}>
+            <View
+              style={[
+                styles.barraLlena,
+                { width: `${Math.max(proporcion * 100, 2)}%`, backgroundColor: tono },
+              ]}
+            />
+          </View>
+
+          <T v="small">
+            {red.puedeOperar
+              ? 'Alcanza para pagar las comisiones de la red. Sepolia, bloque ' +
+                red.bloque.toLocaleString('es-GT') +
+                '.'
+              : 'No alcanza para pagar la comisión de red. Tus operaciones van a fallar hasta que se recargue.'}
+          </T>
+        </>
+      ) : (
+        <T v="small">Consultando la red…</T>
+      )}
+    </Hoja>
+  );
+}
+
 const styles = StyleSheet.create({
   titulo: { marginBottom: space.l },
+  barra: {
+    height: 8,
+    borderRadius: radius.pill,
+    backgroundColor: color.papelHundido,
+    overflow: 'hidden',
+    marginTop: space.xs,
+  },
+  barraLlena: { height: '100%', borderRadius: radius.pill },
   bloque: { gap: space.s, marginBottom: space.m },
   filaHoja: {
     flexDirection: 'row',
