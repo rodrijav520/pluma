@@ -1,36 +1,51 @@
 import React from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { T } from './T';
 import { Boton } from './Boton';
-import { Pluma } from './Pluma';
-import { space } from './tokens';
+import { color, radius, space } from './tokens';
 
-/** Un vacío es una invitación a actuar: pluma + mensaje + UNA acción. */
+/**
+ * Pantalla vacía: es una invitación a actuar, no un cartel de "no hay nada".
+ * Siempre dice qué va a aparecer acá y cómo hacer que aparezca.
+ */
 export function EstadoVacio({
+  icono,
   titulo,
-  detalle,
+  texto,
   accion,
-  onAccion,
 }: {
+  icono?: React.ReactNode;
   titulo: string;
-  detalle?: string;
-  accion?: string;
-  onAccion?: () => void;
+  texto: string;
+  accion?: { titulo: string; onPress: () => void };
 }) {
   return (
-    <View style={{ alignItems: 'center', paddingVertical: space.xxxl, gap: space.l }}>
-      <Pluma alto={96} opacidad={0.5} rotacion={14} />
-      <View style={{ alignItems: 'center', gap: 6 }}>
-        <T v="h2" centrado>
-          {titulo}
-        </T>
-        {detalle ? (
-          <T v="body" centrado style={{ maxWidth: 280 }}>
-            {detalle}
-          </T>
-        ) : null}
-      </View>
-      {accion && onAccion ? <Boton titulo={accion} onPress={onAccion} compacto /> : null}
+    <View style={styles.raiz}>
+      {icono ? <View style={styles.icono}>{icono}</View> : null}
+      <T v="h2" centrado>
+        {titulo}
+      </T>
+      <T v="cuerpo" centrado style={styles.texto}>
+        {texto}
+      </T>
+      {accion ? (
+        <Boton titulo={accion.titulo} onPress={accion.onPress} style={styles.boton} />
+      ) : null}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  raiz: { alignItems: 'center', gap: space.s, paddingVertical: space.xxxl },
+  icono: {
+    width: 64,
+    height: 64,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: color.papelHundido,
+    marginBottom: space.s,
+  },
+  texto: { maxWidth: 300 },
+  boton: { marginTop: space.m, alignSelf: 'stretch' },
+});

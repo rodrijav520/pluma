@@ -1,63 +1,137 @@
-# Pluma 🪶
+# Pluma
 
-**Hace mil años, las plumas de quetzal eran dinero. Pluma las trae de vuelta — digitales.**
+Wallet cripto custodial con conversión a quetzales, para freelancers guatemaltecos.
 
-Wallet **no-custodial** de dólares digitales (USDC en Base) para freelancers guatemaltecos: cobrá al extranjero con un link, mirá todo en quetzales y aprendé cripto sin miedo. Proyecto universitario del curso de Gestión de Proyectos de Ingeniería — corre 100% en **testnet** (dinero de prueba, transacciones reales en blockchain).
+App móvil en **React Native / Expo SDK 57** sobre un backend en **ASP.NET Core 8**.
+Proyecto del curso de Gestión de Proyectos de Ingeniería.
 
-| Documento | Contenido |
-|---|---|
-| [docs/investigacion.md](docs/investigacion.md) | Investigación completa: mercado, competencia (OSMO, Lulubit, Félix…), regulación (Decreto 15-2026), Higgsfield, diseño |
-| [docs/plan.md](docs/plan.md) | Plan de producto y proyecto: objetivos, MoSCoW, stack, riesgos, roadmap del semestre |
-| [docs/diseno.md](docs/diseno.md) | Sistema de diseño "Bosque nuboso": tokens, tipografía, la firma (pluma), motion |
-| [docs/encuesta-freelancers.md](docs/encuesta-freelancers.md) | Instrumento de encuesta para el Estudio de Mercado (n≥50) |
+---
 
-## Correr la app
+## El problema
+
+El dinero que cruza la frontera hacia Guatemala —una remesa familiar o el pago a un
+freelancer— pierde entre **3% y 8%** de su valor en comisiones y tipo de cambio, y
+puede tardar **hasta 5 días** en llegar.
+
+Buena parte de esa pérdida es invisible: bancos y operadoras aplican un margen
+cambiario de 2% a 5% que el usuario nunca ve desglosado.
+
+## La respuesta de Pluma
+
+**La conversión es el héroe de la interfaz, no la letra chica.**
+
+- El saldo se muestra en **quetzales y dólares con el mismo peso tipográfico**.
+- La tasa que se te aplica está a la vista, en vivo, junto al saldo.
+- Cada fila del historial muestra **las dos monedas**, siempre.
+
+El freelancer guatemalteco vive en dos monedas. La interfaz también.
+
+---
+
+## Estructura
+
+```
+.
+├── src/                  App Expo (expo-router, TypeScript)
+│   ├── app/              Rutas
+│   ├── ui/               Sistema de diseño y componentes
+│   ├── core/             Cliente de API, formato, validaciones
+│   ├── state/            Estado global (zustand)
+│   └── content/          Contenido de la Escuela Cripto
+├── backend/              API ASP.NET Core 8 (Clean Architecture)
+├── DESIGN.md             Dirección de arte
+├── PRODUCT.md            Definición de producto
+└── docs/                 Investigación de mercado y plan
+```
+
+---
+
+## Cómo levantarlo
+
+Hacen falta **Node 20+** y el **SDK de .NET 8**.
+
+### 1. Backend
+
+Los secretos no viven en el repositorio. Se generan una vez:
+
+```bash
+cd backend/src/CryptoExchangeGT.API
+
+# Dos claves DISTINTAS: la app no arranca si coinciden
+dotnet run --project ../../tools/CryptoExchangeGT.Cifrador -- generar-clave
+dotnet run --project ../../tools/CryptoExchangeGT.Cifrador -- generar-clave
+```
+
+Se genera una wallet de tesorería de testnet y se cifra su llave:
+
+```bash
+node scripts/gen-tesoreria.mjs
+dotnet run --project backend/tools/CryptoExchangeGT.Cifrador -- cifrar "<CLAVE_MAESTRA>"
+```
+
+Se guardan como secretos de usuario (nunca en git):
+
+```bash
+cd backend/src/CryptoExchangeGT.API
+dotnet user-secrets set "Seguridad:ClaveMaestraBase64"  "<CLAVE_MAESTRA>"
+dotnet user-secrets set "Jwt:ClaveSecreta"              "<CLAVE_JWT>"
+dotnet user-secrets set "Tesoreria:DireccionPublica"    "0x…"
+dotnet user-secrets set "Tesoreria:LlavePrivadaCifrada" "<texto cifrado>"
+```
+
+Y se levanta escuchando en toda la red, para que el teléfono lo alcance:
+
+```bash
+ASPNETCORE_URLS="http://0.0.0.0:5142" dotnet run --project backend/src/CryptoExchangeGT.API
+```
+
+Swagger queda en <http://localhost:5142/swagger>.
+
+### 2. App
 
 ```bash
 npm install
 npx expo start
 ```
 
-- **En tu teléfono (recomendado):** instalá **Expo Go** (gratis, Android/iOS) y escaneá el QR de la terminal. Ambos deben estar en la misma red Wi-Fi.
-- **Demo web:** `npx expo start --web` (la web es solo superficie de demo; cámara y biometría viven en el teléfono).
-
-## Fondear con dinero de prueba (para la demo)
-
-1. Creá tu wallet en la app y copiá tu dirección (Ajustes o Fondear).
-2. **Gas** (ETH de Base Sepolia): [faucet de Coinbase CDP](https://portal.cdp.coinbase.com/products/faucet) o [Alchemy](https://www.alchemy.com/faucets/base-sepolia).
-3. **USDC de prueba**: [faucet oficial de Circle](https://faucet.circle.com) → red **Base Sepolia**.
-4. Consejo: fondeá con días de anticipación — los faucets a veces se secan.
-
-## Guion de demo para la clase (2 teléfonos, ~3 minutos)
-
-1. **Teléfono A (freelancer):** crear wallet → mostrar las 12 palabras ("esto ES la cuenta, nadie más la tiene") → PIN.
-2. A: **Cobrar** → Q1,900 → "Diseño de logo — anticipo" → se genera el QR + botón *Share in English*.
-3. **Teléfono B (el "cliente gringo"):** escanear el QR desde otra wallet (u otra Pluma con Enviar) → confirmar.
-4. A: en segundos cae el pago → **"¡Cayó tu cobro!"** con la pluma animada → movimiento con equivalente en quetzales y hash verificable en el explorador.
-5. Cerrar con el **Simulador**: "$500/mes por PayPal = ~Q3,700 perdidos al año. Con rieles de dólares digitales: centavos."
-
-## Stack (todo gratuito)
-
-Expo SDK 57 · React Native 0.86 · TypeScript · expo-router · **viem** (BIP-39, firma local) · **Base Sepolia** (USDC de Circle) · zustand · expo-secure-store + biometría · reanimated 4 · lucide + QR SVG · Space Grotesk / Inter. **Sin backend**: la blockchain es la fuente de verdad; $0 de infraestructura.
-
-```mermaid
-graph LR
-  C[Cliente en el extranjero<br/>cualquier wallet] -- USDC por Base --> P[Pluma del freelancer<br/>llaves en el teléfono]
-  P -- se muestra en GTQ --> F[Freelancer]
-  P -. fase 2: aliado regulado .-> B[Banco GTQ]
-```
-
-## Scripts útiles
+Se abre **Expo Go** en el teléfono y se escanea el QR. La app deduce sola la IP
+del backend a partir del servidor de Expo; si hace falta forzarla:
 
 ```bash
-npx tsc --noEmit                 # chequeo de tipos
-node scripts/gen-assets.mjs      # regenera ícono/splash + optimiza ilustraciones
-node scripts/captura.mjs shots   # capturas de pantalla (requiere web sirviendo)
-node scripts/e2e-crear.mjs shots # prueba E2E del flujo de creación de wallet
+EXPO_PUBLIC_API_URL=http://192.168.1.6:5142 npx expo start
 ```
 
-## Avisos
+---
 
-- **Versión educativa en testnet**: el saldo es dinero de prueba; no es un servicio financiero ni asesoría.
-- La Escuela Cripto es contenido educativo general (no asesoría fiscal); el contexto regulatorio (Decreto 15-2026) está documentado en la investigación.
-- Ilustraciones generadas con Higgsfield (Soul 2) según el mini-plan de assets del plan de producto; ícono y elementos de UI son SVG propios.
+## Estado
+
+| Parte | Estado |
+|---|---|
+| Registro, login y sesión JWT | Funcionando |
+| Saldo en doble moneda con tasa en vivo | Funcionando |
+| Historial paginado | Funcionando |
+| Compra, cambio a GTQ y envío externo | Requieren tesorería con fondos de testnet |
+| Escuela Cripto | Funcionando |
+
+Las operaciones on-chain necesitan que la wallet de tesorería tenga ETH de
+Sepolia (para gas) y saldo del token de prueba. Sin eso, la API responde con un
+error claro y el saldo del usuario no se mueve.
+
+> **Esto opera sobre la red de pruebas Sepolia.** No es dinero real y no debe
+> usarse como si lo fuera.
+
+---
+
+## Créditos
+
+El backend **CryptoExchangeGT** fue desarrollado por
+[@rodrijav520](https://github.com/rodrijav520), a partir de una revisión de
+seguridad que encontró y corrigió 12 hallazgos —dos de ellos críticos— sobre el
+proyecto original. El detalle está en [`backend/ANALISIS.md`](backend/ANALISIS.md)
+y [`backend/CAMBIOS.md`](backend/CAMBIOS.md).
+
+La app móvil y la integración se construyeron sobre ese trabajo.
+
+La versión anterior de Pluma —no custodial, con frase semilla y llaves en el
+teléfono— se conserva en la rama [`no-custodial`](../../tree/no-custodial) y en el
+tag `v1-no-custodial`.

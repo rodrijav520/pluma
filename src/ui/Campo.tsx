@@ -1,9 +1,15 @@
 import React, { useState } from 'react';
-import { StyleSheet, TextInput, View, type KeyboardTypeOptions } from 'react-native';
+import {
+  StyleSheet,
+  TextInput,
+  View,
+  type KeyboardTypeOptions,
+  type TextInputProps,
+} from 'react-native';
 import { T } from './T';
-import { color, font, radius } from './tokens';
+import { color, font, radius, space } from './tokens';
 
-/** Campo de texto con etiqueta visible, ayuda persistente y error junto al campo. */
+/** Campo con etiqueta visible, ayuda persistente y error junto al campo. */
 export function Campo({
   etiqueta,
   valor,
@@ -17,6 +23,9 @@ export function Campo({
   derecha,
   seguro,
   autoCapitalizar = 'sentences',
+  autoComplete,
+  onSubmit,
+  returnKeyType,
 }: {
   etiqueta: string;
   valor: string;
@@ -30,17 +39,21 @@ export function Campo({
   derecha?: React.ReactNode;
   seguro?: boolean;
   autoCapitalizar?: 'none' | 'sentences' | 'words' | 'characters';
+  autoComplete?: TextInputProps['autoComplete'];
+  onSubmit?: () => void;
+  returnKeyType?: TextInputProps['returnKeyType'];
 }) {
   const [foco, setFoco] = useState(false);
+
   return (
-    <View style={{ gap: 8 }}>
-      <T v="eyebrow">{etiqueta}</T>
+    <View style={{ gap: space.s }}>
+      <T v="etiqueta">{etiqueta}</T>
       <View
         style={[
           styles.caja,
-          multilinea && { minHeight: 88, alignItems: 'flex-start' },
-          foco && { borderColor: color.bordeJade },
-          error ? { borderColor: 'rgba(255,77,94,0.5)' } : null,
+          multilinea && styles.cajaMulti,
+          foco && styles.cajaFoco,
+          error ? styles.cajaError : null,
         ]}
       >
         <TextInput
@@ -49,24 +62,27 @@ export function Campo({
           onFocus={() => setFoco(true)}
           onBlur={() => setFoco(false)}
           placeholder={placeholder}
-          placeholderTextColor={color.plumaTenue}
+          placeholderTextColor={color.lapizTenue}
           keyboardType={teclado}
           multiline={multilinea}
           autoFocus={autoFoco}
           secureTextEntry={seguro}
           autoCapitalize={autoCapitalizar}
+          autoComplete={autoComplete}
           autoCorrect={false}
+          onSubmitEditing={onSubmit}
+          returnKeyType={returnKeyType}
           accessibilityLabel={etiqueta}
           style={[
             styles.input,
-            multilinea && { textAlignVertical: 'top', paddingTop: 12 },
+            multilinea && styles.inputMulti,
             { outlineStyle: 'none' } as object,
           ]}
         />
         {derecha}
       </View>
       {error ? (
-        <T v="small" color={color.pecho} accessibilityLiveRegion="polite">
+        <T v="small" color={color.sale} accessibilityLiveRegion="polite">
           {error}
         </T>
       ) : ayuda ? (
@@ -83,16 +99,20 @@ const styles = StyleSheet.create({
     minHeight: 56,
     borderRadius: radius.m,
     borderWidth: 1,
-    borderColor: color.borde,
-    backgroundColor: 'rgba(236,253,245,0.04)',
+    borderColor: color.trazo,
+    backgroundColor: color.papelAlto,
     paddingHorizontal: 14,
-    gap: 8,
+    gap: space.s,
   },
+  cajaMulti: { minHeight: 88, alignItems: 'flex-start' },
+  cajaFoco: { borderColor: color.tinta, borderWidth: 2, paddingHorizontal: 13 },
+  cajaError: { borderColor: color.sale },
   input: {
     flex: 1,
-    color: color.pluma,
-    fontFamily: font.body,
+    color: color.grafito,
+    fontFamily: font.cifra,
     fontSize: 16,
     paddingVertical: 12,
   },
+  inputMulti: { textAlignVertical: 'top', paddingTop: 12 },
 });

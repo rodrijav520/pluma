@@ -1,9 +1,11 @@
-import React from 'react';
 import { Redirect } from 'expo-router';
-import { useApp } from '../state/app';
+import { useSesion } from '../state/sesion';
 
-/** Puerta de entrada: con wallet → tabs; sin wallet → bienvenida. */
-export default function Gate() {
-  const onboarded = useApp((s) => s.onboarded);
-  return <Redirect href={onboarded ? '/(tabs)' : '/bienvenida'} />;
+/**
+ * Portón. La sesión ya viene restaurada desde el layout raíz, así que acá solo
+ * se decide a dónde entra la persona.
+ */
+export default function Portada() {
+  const usuario = useSesion((s) => s.usuario);
+  return <Redirect href={usuario ? '/(tabs)' : '/bienvenida'} />;
 }

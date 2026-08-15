@@ -1,325 +1,194 @@
-import React, { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { router } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
-import * as LocalAuthentication from 'expo-local-authentication';
-import * as Haptics from 'expo-haptics';
-import { isAddress, type Address } from 'viem';
-import { ClipboardPaste, Fuel, ScanLine, X } from 'lucide-react-native';
+import { ClipboardPaste, Clock } from 'lucide-react-native';
 import { Pantalla } from '../ui/Pantalla';
-import { T, Mono } from '../ui/T';
-import { Glass } from '../ui/Glass';
+import { Hoja } from '../ui/Hoja';
+import { T } from '../ui/T';
 import { Boton } from '../ui/Boton';
 import { Campo } from '../ui/Campo';
-import { Pluma } from '../ui/Pluma';
-import { PinPad } from '../ui/PinPad';
+import { Aviso } from '../ui/Avisos';
+import { EncabezadoAtras } from '../ui/EncabezadoAtras';
 import { EntradaMonto } from '../ui/EntradaMonto';
-import { Presionable } from '../ui/Presionable';
-import { color, hitSlop, radius, space } from '../ui/tokens';
-import { leerFrase, verificarPin } from '../core/wallet';
-import { sendUsdc, waitForTx, txUrl } from '../core/chain';
-import { fmtGtq, fmtUsd, shortAddr, usdToUnits, unitsToUsd } from '../core/format';
-import { useApp } from '../state/app';
-import { useChain } from '../state/chain';
-import { useFx } from '../state/fx';
-import { useScan } from '../state/scan';
-import { useToast } from '../state/toast';
+import { Deslizador } from '../ui/Deslizador';
+import { useSaldo } from '../hooks/use-saldo';
+import { useSesion } from '../state/sesion';
+import { api, ErrorApi, type EnviarResponse } from '../core/api';
+import { cripto, direccionCorta, quetzales } from '../core/format';
+import { color, space } from '../ui/tokens';
 
-type Paso = 'form' | 'auth' | 'enviando' | 'listo';
+/** Mismo patrón que valida el backend en EnviarAWalletExternaRequest. */
+const DIRECCION_EVM = /^0x[a-fA-F0-9]{40}$/;
+const DIRECCION_CERO = '0x0000000000000000000000000000000000000000';
 
 export default function Enviar() {
-  const router = useRouter();
-  const avisar = useToast((s) => s.avisar);
-  const { address, bioActiva } = useApp();
-  const { usdc, gas, agregarPendiente, resolverPendiente, refrescar } = useChain();
-  const rate = useFx((s) => s.rate);
-  const escaneado = useScan((s) => s.resultado);
-  const consumir = useScan((s) => s.consumir);
+  const { saldo } = useSaldo();
+  const salir = useSesion((s) => s.salir);
 
-  const [paso, setPaso] = useState<Paso>('form');
-  const [dest, setDest] = useState('');
-  const [errorDest, setErrorDest] = useState<string | null>(null);
-  const [usd, setUsd] = useState(0);
-  const [montoKey, setMontoKey] = useState(0);
-  const [usdInicial, setUsdInicial] = useState<number | undefined>(undefined);
-  const [concepto, setConcepto] = useState('');
-  const [pinError, setPinError] = useState(false);
-  const [hash, setHash] = useState<string | null>(null);
+  const [destino, setDestino] = useState('');
+  const [monto, setMonto] = useState('');
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [hecho, setHecho] = useState<EnviarResponse | null>(null);
 
-  useEffect(() => {
-    if (escaneado) {
-      setDest(escaneado.address);
-      setErrorDest(null);
-      if (escaneado.usd && escaneado.usd > 0) {
-        setUsd(escaneado.usd);
-        setUsdInicial(escaneado.usd);
-        setMontoKey((k) => k + 1);
-      }
-      consumir();
-    }
-  }, [escaneado, consumir]);
+  const numero = Number(monto || 0);
+  const tasa = saldo?.tasaCambio ?? 0;
+  const disponible = saldo?.saldoCripto ?? 0;
+  const limpio = destino.trim();
 
-  const saldoUsd = unitsToUsd(BigInt(usdc));
-  const sinGas = BigInt(gas) === 0n;
+  const errDestino = !limpio
+    ? null
+    : !DIRECCION_EVM.test(limpio)
+      ? 'Esa dirección no tiene formato válido. Debe empezar con 0x y tener 42 caracteres.'
+      : limpio.toLowerCase() === DIRECCION_CERO
+        ? 'Esa es la dirección cero: enviar ahí quema los fondos para siempre.'
+        : limpio.toLowerCase() === saldo?.direccionWallet.toLowerCase()
+          ? 'Esa es tu propia dirección.'
+          : null;
 
-  const validar = (): boolean => {
-    if (!isAddress(dest.trim())) {
-      setErrorDest('Esa dirección no es válida. Revisá que empiece con 0x y esté completa.');
-      return false;
-    }
-    if (dest.trim().toLowerCase() === address?.toLowerCase()) {
-      setErrorDest('Esa es tu propia dirección — no hace falta enviarte a vos mismo.');
-      return false;
-    }
-    if (usd <= 0) return false;
-    if (usd > saldoUsd) {
-      avisar(`Solo tenés ${fmtUsd(saldoUsd)} disponibles.`, 'error');
-      return false;
-    }
-    return true;
-  };
+  const errMonto =
+    numero <= 0 ? null : numero > disponible ? `Solo tenés ${cripto(disponible)} USDT.` : null;
 
-  const ejecutarEnvio = async () => {
-    setPaso('enviando');
+  const puede =
+    numero > 0 && !errMonto && DIRECCION_EVM.test(limpio) && !errDestino && !enviando;
+
+  async function pegar() {
+    const texto = await Clipboard.getStringAsync();
+    if (texto) setDestino(texto.trim());
+  }
+
+  async function enviar() {
+    if (!puede) return;
+    const token = useSesion.getState().tokenVigente();
+    if (!token) return salir();
+
+    setEnviando(true);
+    setError(null);
     try {
-      const frase = await leerFrase();
-      if (!frase) throw new Error('No se encontró la frase en este teléfono.');
-      const unidades = usdToUnits(usd);
-      const h = await sendUsdc(frase, dest.trim() as Address, unidades);
-      setHash(h);
-      agregarPendiente({
-        hash: h,
-        dir: 'out',
-        units: unidades.toString(),
-        otra: dest.trim(),
-        ts: Date.now(),
-        block: '0',
-        status: 'pendiente',
-        concepto: concepto.trim() || undefined,
-        gtqRate: rate,
-      });
-      setPaso('listo');
-      if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-      waitForTx(h)
-        .then((r) => {
-          resolverPendiente(h, r === 'ok');
-          if (address) refrescar(address, useApp.getState().bloqueCreacion, rate);
-        })
-        .catch(() => {});
+      setHecho(await api.enviarExterno(token, numero, limpio));
     } catch (e) {
-      const msg = e instanceof Error ? e.message : '';
-      setPaso('form');
-      if (/insufficient funds|gas/i.test(msg)) {
-        avisar('Te falta gas de prueba para la red. Abrí Fondear y conseguilo gratis.', 'error');
-      } else {
-        avisar('No se pudo enviar. Revisá tu conexión y probá de nuevo.', 'error');
-      }
+      if (e instanceof ErrorApi && e.esSesionVencida) return salir();
+      setError(e instanceof ErrorApi ? e.message : 'No se pudo enviar.');
+    } finally {
+      setEnviando(false);
     }
-  };
-
-  const autenticar = async () => {
-    if (!validar()) return;
-    if (sinGas) {
-      avisar('Necesitás una pizca de gas de prueba (gratis) para enviar.', 'error');
-      return;
-    }
-    if (bioActiva && Platform.OS !== 'web') {
-      const res = await LocalAuthentication.authenticateAsync({
-        promptMessage: `Enviar ${fmtUsd(usd)}`,
-        cancelLabel: 'Usar PIN',
-      });
-      if (res.success) {
-        ejecutarEnvio();
-        return;
-      }
-    }
-    setPaso('auth');
-  };
-
-  // ── Vistas por paso ──
-  if (paso === 'listo') {
-    return (
-      <Pantalla scroll={false} style={{ justifyContent: 'center', alignItems: 'center', gap: space.l }}>
-        <Pluma alto={130} animada />
-        <Mono size={34} weight="bold">
-          −{fmtUsd(usd)}
-        </Mono>
-        <T v="bodyLg" centrado>
-          Tu envío va volando a {shortAddr(dest)}.
-        </T>
-        {hash && (
-          <T v="small" onPress={() => Linking.openURL(txUrl(hash))}>
-            Ver en el explorador →
-          </T>
-        )}
-        <Boton titulo="Listo" onPress={() => router.back()} style={{ alignSelf: 'stretch', marginTop: space.l }} />
-      </Pantalla>
-    );
   }
 
-  if (paso === 'enviando') {
+  if (hecho) {
     return (
-      <Pantalla scroll={false} style={{ justifyContent: 'center', alignItems: 'center', gap: space.l }}>
-        <Pluma alto={110} animada opacidad={0.8} />
-        <T v="h2">Firmando y enviando…</T>
-        <T v="body" centrado>
-          Tu teléfono firma la transacción con TUS llaves. Nadie más puede.
-        </T>
-      </Pantalla>
-    );
-  }
-
-  if (paso === 'auth') {
-    return (
-      <Pantalla scroll={false} style={{ justifyContent: 'center', gap: space.xxl }}>
-        <View style={{ alignItems: 'center', gap: 6 }}>
-          <T v="h2">Confirmá con tu PIN</T>
-          <T v="body">
-            Enviar {fmtUsd(usd)} a {shortAddr(dest)}
+      <Pantalla scroll={false}>
+        <EncabezadoAtras titulo="Envío hecho" />
+        <View style={styles.resultado}>
+          <View style={styles.marcaEspera}>
+            <Clock size={30} color={color.espera} strokeWidth={2} />
+          </View>
+          <T v="h1" centrado>
+            Confirmando en la red
           </T>
+          <T v="cuerpo" centrado style={styles.resultadoTexto}>
+            Enviaste {cripto(numero)} USDT a {direccionCorta(limpio)}. Los envíos a otra billetera
+            no se pueden revertir.
+          </T>
+          <Hoja style={styles.detalle}>
+            <Fila etiqueta="Monto" valor={`${cripto(numero)} USDT`} />
+            <View style={styles.divisor} />
+            <Fila etiqueta="Para" valor={direccionCorta(limpio)} />
+            <View style={styles.divisor} />
+            <Fila etiqueta="Estado" valor={hecho.estado} tono={color.espera} />
+          </Hoja>
         </View>
-        <PinPad
-          error={pinError}
-          onCambio={() => setPinError(false)}
-          onCompleto={async (pin) => {
-            const ok = await verificarPin(pin);
-            if (!ok) {
-              setPinError(true);
-              return;
-            }
-            ejecutarEnvio();
-          }}
-        />
-        <Boton titulo="Cancelar" variante="fantasma" onPress={() => setPaso('form')} />
+        <Boton titulo="Entendido" onPress={() => router.back()} />
       </Pantalla>
     );
   }
 
   return (
     <Pantalla scroll={false}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <View style={styles.encabezado}>
-          <T v="h1">Enviar</T>
-          <Presionable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Cerrar" style={{ padding: 8 }}>
-            <X size={22} color={color.plumaSuave} />
-          </Presionable>
-        </View>
+      <EncabezadoAtras titulo="Enviar" />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.cuerpo}
+      >
+        <ScrollView
+          contentContainerStyle={styles.centro}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {error ? <Aviso tono="error" texto={error} /> : null}
 
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: space.xl, paddingVertical: space.l }}>
+          <Aviso
+            tono="espera"
+            texto="Un envío a otra billetera no se puede deshacer. Revisá la dirección antes de confirmar."
+          />
+
           <Campo
-            etiqueta="¿A quién?"
-            valor={dest}
-            onCambio={(v) => {
-              setDest(v);
-              setErrorDest(null);
-            }}
-            placeholder="Dirección 0x…"
+            etiqueta="Dirección de destino"
+            valor={destino}
+            onCambio={setDestino}
+            placeholder="0x…"
+            error={errDestino}
             autoCapitalizar="none"
-            error={errorDest}
-            ayuda="Solo direcciones de la red Base. Verificá los primeros y últimos caracteres."
             derecha={
-              <View style={{ flexDirection: 'row', gap: 4 }}>
-                <Presionable
-                  onPress={async () => {
-                    const v = await Clipboard.getStringAsync();
-                    if (v) {
-                      setDest(v.trim());
-                      setErrorDest(null);
-                    }
-                  }}
-                  accessibilityRole="button"
-                  accessibilityLabel="Pegar dirección"
-                  hitSlop={hitSlop}
-                  style={styles.iconoCampo}
-                >
-                  <ClipboardPaste size={17} color={color.plumaSuave} />
-                </Presionable>
-                {Platform.OS !== 'web' && (
-                  <Presionable
-                    onPress={() => router.push('/escanear')}
-                    accessibilityRole="button"
-                    accessibilityLabel="Escanear QR"
-                    hitSlop={hitSlop}
-                    style={styles.iconoCampo}
-                  >
-                    <ScanLine size={17} color={color.jade} />
-                  </Presionable>
-                )}
-              </View>
+              <Boton
+                titulo="Pegar"
+                variante="fantasma"
+                compacto
+                onPress={pegar}
+                icono={<ClipboardPaste size={16} color={color.tinta} strokeWidth={2} />}
+              />
             }
           />
 
-          <View style={{ paddingVertical: space.s }}>
-            <EntradaMonto key={montoKey} inicialUsd={usdInicial} onUsd={setUsd} autoFoco={false} />
-            <T v="small" centrado style={{ marginTop: 8 }}>
-              Disponible: {fmtUsd(saldoUsd)}
-            </T>
-          </View>
-
-          <Campo
-            etiqueta="Concepto (opcional)"
-            valor={concepto}
-            onCambio={setConcepto}
-            placeholder="¿Para qué es?"
+          <EntradaMonto
+            simbolo="$"
+            valor={monto}
+            onCambio={setMonto}
+            autoFoco={false}
+            equivalente={numero > 0 && tasa > 0 ? `≈ ${quetzales(numero * tasa)}` : undefined}
+            disponible={`Disponible ${cripto(disponible)} USDT`}
+            onMaximo={disponible > 0 ? () => setMonto(String(disponible)) : undefined}
+            error={errMonto}
           />
-
-          {sinGas && (
-            <Presionable onPress={() => router.push('/fondear')} accessibilityRole="button" accessibilityLabel="Conseguir gas de prueba">
-              <Glass radio={radius.m} relleno="rgba(233,188,90,0.08)" style={styles.avisoGas}>
-                <Fuel size={18} color={color.cacao} />
-                <T v="body" color={color.pluma} style={{ flex: 1 }}>
-                  Te falta <T v="bodyStrong">gas de prueba</T> (gratis) para poder enviar. Tocá aquí
-                  para conseguirlo.
-                </T>
-              </Glass>
-            </Presionable>
-          )}
-
-          <Glass radio={radius.m} style={styles.resumen}>
-            <View style={styles.filaResumen}>
-              <T v="small">Recibirá</T>
-              <Mono size={14}>{fmtUsd(usd)} USDC</Mono>
-            </View>
-            <View style={styles.filaResumen}>
-              <T v="small">Equivale a</T>
-              <Mono size={14}>{fmtGtq(usd * rate)}</Mono>
-            </View>
-            <View style={styles.filaResumen}>
-              <T v="small">Comisión de red (Base)</T>
-              <Mono size={14} color={color.jade}>
-                menos de Q0.10
-              </Mono>
-            </View>
-          </Glass>
         </ScrollView>
 
-        <Boton
-          titulo="Revisar y enviar"
-          onPress={autenticar}
-          deshabilitado={usd <= 0 || dest.trim().length === 0}
+        <Deslizador
+          textoInicial={numero > 0 ? `$ ${cripto(numero)}` : '$ 0'}
+          textoFinal={limpio ? direccionCorta(limpio) : 'destino'}
+          onConfirmar={enviar}
+          cargando={enviando}
+          deshabilitado={!puede}
         />
       </KeyboardAvoidingView>
     </Pantalla>
   );
 }
 
+function Fila({ etiqueta, valor, tono }: { etiqueta: string; valor: string; tono?: string }) {
+  return (
+    <View style={styles.fila}>
+      <T v="cuerpo">{etiqueta}</T>
+      <T v="dato" color={tono}>
+        {valor}
+      </T>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  encabezado: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  iconoCampo: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+  cuerpo: { flex: 1, justifyContent: 'space-between', paddingBottom: space.l },
+  centro: { gap: space.l, paddingTop: space.xl, paddingBottom: space.l },
+  fila: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.m },
+  divisor: { height: 1, backgroundColor: color.trazo, marginVertical: space.m },
+  resultado: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: space.m },
+  marcaEspera: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(236,253,245,0.06)',
+    backgroundColor: color.esperaTenue,
   },
-  avisoGas: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    padding: space.m,
-    borderColor: 'rgba(233,188,90,0.3)',
-  },
-  resumen: { padding: space.l, gap: 10 },
-  filaResumen: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  resultadoTexto: { maxWidth: 320 },
+  detalle: { alignSelf: 'stretch', marginTop: space.l },
 });

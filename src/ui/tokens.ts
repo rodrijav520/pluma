@@ -1,46 +1,49 @@
 import { Platform } from 'react-native';
 
 /**
- * Pluma — tokens "Bosque nuboso"
- * Fuente de verdad de diseño: docs/diseno.md
+ * Pluma — tokens "Tinta y papel"
+ * Fuente de verdad de diseño: DESIGN.md
+ *
+ * Pluma escribe: el acento es tinta, el fondo es papel, las superficies se
+ * apilan como hojas. El vidrio aparece solo donde algo se superpone.
  */
 
 export const color = {
-  // Fondos (verde-bosque, nunca #000 puro)
-  noche: '#0B1210',
-  bruma: '#121D18',
-  musgo: '#1A2822',
-  nieblaFill: 'rgba(236,253,245,0.06)',
-  nieblaFillFuerte: 'rgba(236,253,245,0.09)',
+  // Papel — fondos
+  papel: '#F2F4F7',
+  papelAlto: '#FFFFFF',
+  papelHundido: '#E8EBF0',
 
-  // Acentos
-  jade: '#2DE39B',
-  jadeProfundo: '#17B87C',
-  teal: '#27C9B8',
-  cielo: '#3FA9F5',
-  pecho: '#FF4D5E',
-  cacao: '#E9BC5A',
+  // Tinta — acento único de marca
+  tinta: '#2B3A8F',
+  tintaProfunda: '#1E2A6B',
+  tintaTenue: 'rgba(43,58,143,0.10)',
+  tintaBorde: 'rgba(43,58,143,0.24)',
+  sobreTinta: '#FFFFFF',
 
   // Texto
-  pluma: '#EAF6EF',
-  plumaSuave: 'rgba(234,246,239,0.64)',
-  plumaTenue: 'rgba(234,246,239,0.48)',
-  sobreJade: '#08130E',
+  grafito: '#141821',
+  lapiz: '#5A6376',
+  lapizTenue: '#8A92A3',
 
   // Bordes
-  borde: 'rgba(234,246,239,0.08)',
-  bordeLuz: 'rgba(255,255,255,0.14)',
-  bordeJade: 'rgba(45,227,155,0.35)',
+  trazo: 'rgba(20,24,33,0.10)',
+  trazoFuerte: 'rgba(20,24,33,0.16)',
 
-  // Semánticos
-  exito: '#2DE39B',
-  peligro: '#FF4D5E',
-  alerta: '#E9BC5A',
-  overlay: 'rgba(4,8,7,0.55)',
+  // Semánticos — solo datos, nunca decoración
+  entra: '#0E9F6E',
+  sale: '#D64560',
+  espera: '#B4770E',
+  entraTenue: 'rgba(14,159,110,0.12)',
+  saleTenue: 'rgba(214,69,96,0.12)',
+  esperaTenue: 'rgba(180,119,14,0.14)',
+
+  /** RESERVADO a la pieza firma (deslizador) y al momento "te llegó". Nada más. */
+  marigold: '#F2A93B',
+  marigoldTenue: 'rgba(242,169,59,0.18)',
+
+  overlay: 'rgba(20,24,33,0.45)',
 } as const;
-
-/** Gradiente firma: plumaje del quetzal (verde → teal → azul). Solo pluma, FAB y progreso. */
-export const iridiscencia = [color.jade, color.teal, color.cielo] as const;
 
 export const space = {
   xs: 4,
@@ -54,38 +57,62 @@ export const space = {
 } as const;
 
 export const radius = {
-  s: 12,
-  m: 16,
-  card: 24,
+  s: 10,
+  m: 14,
+  hoja: 22,
   sheet: 28,
   pill: 999,
 } as const;
 
 export const font = {
-  display: 'SpaceGrotesk_700Bold',
-  displayMed: 'SpaceGrotesk_500Medium',
-  body: 'Inter_400Regular',
-  bodyMed: 'Inter_500Medium',
-  bodySemi: 'Inter_600SemiBold',
+  /** Bricolage habla: títulos, wordmark. */
+  voz: 'BricolageGrotesque_700Bold',
+  vozMed: 'BricolageGrotesque_600SemiBold',
+  /** Inter cuenta: todo número, dato y etiqueta. */
+  cifra: 'Inter_400Regular',
+  cifraMed: 'Inter_500Medium',
+  cifraSemi: 'Inter_600SemiBold',
+  cifraBold: 'Inter_700Bold',
 } as const;
 
+/** Cifras de ancho fijo: el saldo no baila cuando se actualiza. */
+const tabular = { fontVariant: ['tabular-nums'] as const };
+
 export const type = {
-  hero: { fontFamily: font.display, fontSize: 42, letterSpacing: -1, color: color.pluma },
-  h1: { fontFamily: font.display, fontSize: 28, letterSpacing: -0.5, color: color.pluma },
-  h2: { fontFamily: font.displayMed, fontSize: 20, letterSpacing: -0.2, color: color.pluma },
-  bodyLg: { fontFamily: font.body, fontSize: 16, lineHeight: 24, color: color.plumaSuave },
-  body: { fontFamily: font.body, fontSize: 15, lineHeight: 22, color: color.plumaSuave },
-  bodyStrong: { fontFamily: font.bodySemi, fontSize: 15, lineHeight: 22, color: color.pluma },
-  small: { fontFamily: font.body, fontSize: 13, lineHeight: 18, color: color.plumaTenue },
-  eyebrow: {
-    fontFamily: font.bodySemi,
+  // Saldo — las dos monedas con el mismo peso visual
+  saldoMayor: {
+    fontFamily: font.cifraBold,
+    fontSize: 52,
+    letterSpacing: -1.5,
+    color: color.grafito,
+    ...tabular,
+  },
+  saldoMenor: {
+    fontFamily: font.cifraSemi,
+    fontSize: 34,
+    letterSpacing: -0.8,
+    color: color.lapiz,
+    ...tabular,
+  },
+
+  // Voz — Bricolage
+  h1: { fontFamily: font.voz, fontSize: 28, letterSpacing: -0.6, color: color.grafito },
+  h2: { fontFamily: font.vozMed, fontSize: 20, letterSpacing: -0.3, color: color.grafito },
+
+  // Cifra — Inter
+  cuerpo: { fontFamily: font.cifra, fontSize: 15, lineHeight: 22, color: color.lapiz },
+  cuerpoFuerte: { fontFamily: font.cifraSemi, fontSize: 15, lineHeight: 22, color: color.grafito },
+  dato: { fontFamily: font.cifraSemi, fontSize: 15, color: color.grafito, ...tabular },
+  datoSuave: { fontFamily: font.cifra, fontSize: 13, color: color.lapiz, ...tabular },
+  small: { fontFamily: font.cifra, fontSize: 13, lineHeight: 18, color: color.lapiz },
+  etiqueta: {
+    fontFamily: font.cifraSemi,
     fontSize: 11,
     letterSpacing: 1.2,
     textTransform: 'uppercase' as const,
-    color: color.plumaTenue,
+    color: color.lapizTenue,
   },
-  boton: { fontFamily: font.displayMed, fontSize: 16, letterSpacing: 0.2 },
-  mono: { fontFamily: font.displayMed, fontVariant: ['tabular-nums'] as const },
+  boton: { fontFamily: font.cifraSemi, fontSize: 16, letterSpacing: 0.1 },
 } as const;
 
 export const motion = {
@@ -99,29 +126,45 @@ export const motion = {
   staggerMs: 40,
 } as const;
 
+/** Hojas apiladas: sombra suave y baja, nunca resplandor de color. */
 export const elevation = {
-  jadeGlow: {
-    shadowColor: color.jade,
-    shadowOpacity: 0.28,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 6 },
+  hoja: {
+    shadowColor: '#141821',
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
+  },
+  hojaAlta: {
+    shadowColor: '#141821',
+    shadowOpacity: 0.1,
+    shadowRadius: 28,
+    shadowOffset: { width: 0, height: 12 },
     elevation: 8,
   },
-  suave: {
-    shadowColor: '#000',
-    shadowOpacity: 0.35,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 10 },
+  tinta: {
+    shadowColor: color.tinta,
+    shadowOpacity: 0.22,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
     elevation: 6,
   },
 } as const;
 
 export const hitSlop = { top: 10, bottom: 10, left: 10, right: 10 } as const;
 
-/** Glass: en Android el blur es costoso en Expo Go → superficie más opaca. */
+/** Área táctil mínima accesible. */
+export const TOQUE_MIN = 44;
+
+/**
+ * Vidrio solo donde algo se superpone: encabezado al hacer scroll, barra de
+ * acciones sobre la lista, hojas modales. En Android el blur es costoso en
+ * Expo Go, así que la superficie se vuelve casi opaca.
+ */
 export const glass = {
   useBlur: Platform.OS !== 'android',
-  intensity: 18,
-  androidFill: 'rgba(18,29,24,0.94)',
-  fill: color.nieblaFill,
+  intensity: 24,
+  androidFill: 'rgba(242,244,247,0.96)',
+  fill: 'rgba(255,255,255,0.62)',
+  borde: 'rgba(255,255,255,0.7)',
 } as const;

@@ -2,10 +2,14 @@ import React from 'react';
 import { ActivityIndicator, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { T } from './T';
 import { Presionable } from './Presionable';
-import { color, elevation, radius } from './tokens';
+import { color, elevation, radius, TOQUE_MIN } from './tokens';
 
 type Variante = 'primario' | 'secundario' | 'peligro' | 'fantasma';
 
+/**
+ * Un solo CTA sólido por vista. El secundario va en contorno.
+ * El acento es tinta — el marigold está reservado a la pieza firma.
+ */
 export function Boton({
   titulo,
   onPress,
@@ -28,16 +32,17 @@ export function Boton({
   const inactivo = deshabilitado || cargando;
 
   const fondo: Record<Variante, ViewStyle> = {
-    primario: { backgroundColor: color.jade, ...(!inactivo ? elevation.jadeGlow : null) },
-    secundario: { backgroundColor: 'transparent', borderWidth: 1, borderColor: color.bordeLuz },
-    peligro: { backgroundColor: 'rgba(255,77,94,0.12)', borderWidth: 1, borderColor: 'rgba(255,77,94,0.4)' },
+    primario: { backgroundColor: color.tinta, ...(!inactivo ? elevation.tinta : null) },
+    secundario: { backgroundColor: color.papelAlto, borderWidth: 1, borderColor: color.trazoFuerte },
+    peligro: { backgroundColor: color.saleTenue, borderWidth: 1, borderColor: color.sale },
     fantasma: { backgroundColor: 'transparent' },
   };
+
   const texto: Record<Variante, string> = {
-    primario: color.sobreJade,
-    secundario: color.pluma,
-    peligro: color.pecho,
-    fantasma: color.plumaSuave,
+    primario: color.sobreTinta,
+    secundario: color.grafito,
+    peligro: color.sale,
+    fantasma: color.tinta,
   };
 
   return (
@@ -47,13 +52,7 @@ export function Boton({
       accessibilityRole="button"
       accessibilityLabel={titulo}
       accessibilityState={{ disabled: !!inactivo, busy: !!cargando }}
-      style={[
-        styles.base,
-        compacto && styles.compacto,
-        fondo[variante],
-        inactivo && { opacity: 0.45 },
-        style,
-      ]}
+      style={[styles.base, compacto && styles.compacto, fondo[variante], inactivo && styles.inactivo, style]}
     >
       {cargando ? (
         <ActivityIndicator color={texto[variante]} />
@@ -77,6 +76,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 24,
   },
-  compacto: { height: 44, paddingHorizontal: 18 },
+  compacto: { height: TOQUE_MIN, paddingHorizontal: 18 },
+  inactivo: { opacity: 0.4 },
   fila: { flexDirection: 'row', alignItems: 'center', gap: 8 },
 });

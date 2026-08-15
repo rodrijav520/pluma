@@ -1,125 +1,75 @@
-import React, { useRef, useState } from 'react';
-import { Dimensions, Image, ScrollView, StyleSheet, View } from 'react-native';
-import { useRouter } from 'expo-router';
-import Animated, { FadeInDown } from 'react-native-reanimated';
-import { soloNativo } from '../ui/anim';
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import { router } from 'expo-router';
 import { Pantalla } from '../ui/Pantalla';
+import { Hoja } from '../ui/Hoja';
 import { T } from '../ui/T';
 import { Boton } from '../ui/Boton';
-import { color, radius, space } from '../ui/tokens';
+import { Pluma } from '../ui/Pluma';
+import { color, space } from '../ui/tokens';
 
-const ANCHO = Dimensions.get('window').width;
-
-const SLIDES = [
-  {
-    img: require('../../assets/ilustraciones/hero-cobra.webp'),
-    titulo: 'Cobrá al mundo',
-    texto:
-      'Mandá tu pluma —un link de cobro— y recibí dólares digitales en minutos. No en 5 días, no perdiendo 8%.',
-  },
-  {
-    img: require('../../assets/ilustraciones/hero-llaves.webp'),
-    titulo: 'Tus llaves, tu pisto',
-    texto:
-      'Pluma es no-custodial: las llaves de tu dinero viven solo en tu teléfono. El quetzal no vive enjaulado.',
-  },
-  {
-    img: require('../../assets/ilustraciones/hero-aprende.webp'),
-    titulo: 'Aprendé sin miedo',
-    texto:
-      'La Escuela Cripto te lleva de cero a cobrar con confianza: lecciones de 1 minuto, en chapín y sin humo.',
-  },
-] as const;
-
+/**
+ * Portada.
+ *
+ * En vez de un carrusel de tres láminas genéricas, se abre con el número que
+ * duele: cuánto se queda un banco de una remesa o un pago de cliente. Es el
+ * dato más característico del problema y no necesita adorno.
+ */
 export default function Bienvenida() {
-  const router = useRouter();
-  const [pagina, setPagina] = useState(0);
-  const scrollRef = useRef<ScrollView>(null);
-
   return (
-    <Pantalla scroll={false} style={{ paddingHorizontal: 0 }}>
-      <View style={{ flex: 1 }}>
-        <ScrollView
-          ref={scrollRef}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          onMomentumScrollEnd={(e) =>
-            setPagina(Math.round(e.nativeEvent.contentOffset.x / ANCHO))
-          }
-        >
-          {SLIDES.map((s, i) => (
-            <View key={i} style={{ width: ANCHO, paddingHorizontal: space.pantalla }}>
-              <Animated.View entering={soloNativo(FadeInDown.duration(320))} style={styles.slide}>
-                <Image source={s.img} style={styles.imagen} accessibilityIgnoresInvertColors />
-                <T v="h1" centrado>
-                  {s.titulo}
-                </T>
-                <T v="bodyLg" centrado style={{ maxWidth: 320 }}>
-                  {s.texto}
-                </T>
-              </Animated.View>
-            </View>
-          ))}
-        </ScrollView>
+    <Pantalla scroll={false} style={styles.raiz}>
+      <View style={styles.marca}>
+        <Pluma alto={44} />
+        <T v="h2">Pluma</T>
+      </View>
 
-        <View style={styles.puntos}>
-          {SLIDES.map((_, i) => (
-            <View
-              key={i}
-              style={[
-                styles.punto,
-                i === pagina && { backgroundColor: color.jade, width: 22 },
-              ]}
-            />
-          ))}
-        </View>
+      <View style={styles.centro}>
+        <T v="h1" style={styles.titulo}>
+          De cada $500 que te mandan, un banco se queda hasta $40.
+        </T>
+        <T v="cuerpo" style={styles.bajada}>
+          Pluma cobra en dólares digitales y te los pasa a quetzales con la tasa a la vista. Sin
+          margen escondido, sin esperar cinco días.
+        </T>
 
-        <View style={{ paddingHorizontal: space.pantalla, gap: 10 }}>
-          {pagina < SLIDES.length - 1 ? (
-            <Boton
-              titulo="Siguiente"
-              onPress={() =>
-                scrollRef.current?.scrollTo({ x: ANCHO * (pagina + 1), animated: true })
-              }
-            />
-          ) : (
-            <Boton titulo="Crear mi wallet" onPress={() => router.push('/crear/frase')} />
-          )}
-          <Boton
-            titulo="Ya tengo una wallet"
-            variante="fantasma"
-            onPress={() => router.push('/importar')}
-          />
-        </View>
+        <Hoja style={styles.comparacion}>
+          <Fila etiqueta="Banco tradicional" valor="hasta 8%" tono={color.sale} />
+          <View style={styles.divisor} />
+          <Fila etiqueta="Tasa que ves en Pluma" valor="la del mercado" tono={color.entra} />
+        </Hoja>
+      </View>
+
+      <View style={styles.acciones}>
+        <Boton titulo="Crear mi cuenta" onPress={() => router.push('/crear-cuenta')} />
+        <Boton
+          titulo="Ya tengo cuenta"
+          variante="fantasma"
+          onPress={() => router.push('/entrar')}
+        />
       </View>
     </Pantalla>
   );
 }
 
+function Fila({ etiqueta, valor, tono }: { etiqueta: string; valor: string; tono: string }) {
+  return (
+    <View style={styles.fila}>
+      <T v="cuerpo">{etiqueta}</T>
+      <T v="dato" color={tono}>
+        {valor}
+      </T>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  slide: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: space.l,
-  },
-  imagen: {
-    width: Math.min(ANCHO - 80, 330),
-    height: Math.min(ANCHO - 80, 330),
-    borderRadius: radius.card,
-    marginBottom: space.s,
-  },
-  puntos: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 8,
-    marginVertical: space.xl,
-  },
-  punto: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: color.musgo,
-  },
+  raiz: { justifyContent: 'space-between' },
+  marca: { flexDirection: 'row', alignItems: 'center', gap: space.s },
+  centro: { flex: 1, justifyContent: 'center', gap: space.l },
+  titulo: { fontSize: 34, lineHeight: 40 },
+  bajada: { fontSize: 16, lineHeight: 24 },
+  comparacion: { marginTop: space.s, gap: space.m },
+  fila: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  divisor: { height: 1, backgroundColor: color.trazo },
+  acciones: { gap: space.s },
 });

@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\CryptoExchangeGT.Domain\CryptoExchangeGT.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Solo las abstracciones: la capa de aplicación registra eventos pero no
+         decide a dónde van. El proveedor concreto lo configura la API. -->
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+</Project>

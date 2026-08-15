@@ -1,10 +1,13 @@
 import React from 'react';
-import { Tabs } from 'expo-router';
+import { Redirect, Tabs } from 'expo-router';
 import { BarraTabs } from '../../ui/BarraTabs';
-import { usePolling } from '../../hooks/use-polling';
+import { useSesion } from '../../state/sesion';
 
 export default function TabsLayout() {
-  usePolling();
+  const usuario = useSesion((s) => s.usuario);
+
+  // Nadie llega al área privada sin sesión, aunque entre por deep link.
+  if (!usuario) return <Redirect href="/bienvenida" />;
 
   return (
     <Tabs

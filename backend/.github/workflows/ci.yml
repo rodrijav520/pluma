@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restaurar
+        run: dotnet restore
+
+      # TreatWarningsAsErrors está activo en todos los proyectos: un warning
+      # nuevo rompe la compilación acá antes de llegar a main.
+      - name: Compilar
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Probar
+        run: dotnet test --no-build --configuration Release --verbosity normal
+
+  detectar-secretos:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # El problema original fue exactamente este: secretos versionados en
+      # appsettings.json. Esta verificación impide que vuelva a pasar.
+      - name: Verificar que no haya secretos en appsettings
+        run: |
+          set -e
+          fallo=0
+          for clave in ClaveMaestraBase64 ClaveSecreta LlavePrivadaCifrada; do
+            if grep -rn "\"$clave\"[[:space:]]*:[[:space:]]*\"..*\"" \
+                 --include="appsettings*.json" . ; then
+              echo "::error::$clave tiene un valor en un appsettings versionado."
+              fallo=1
+            fi
+          done
+          exit $fallo
+
+      - name: Verificar que no haya bases de datos versionadas
+        run: |
+          if git ls-files | grep -E '\.db$|\.db-wal$|\.db-shm$'; then
+            echo "::error::Hay archivos de base de datos versionados. Contienen llaves privadas."
+            exit 1
+          fi

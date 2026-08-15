@@ -1,114 +1,120 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
-import { ArrowUpDown } from 'lucide-react-native';
-import { T, Mono } from './T';
+import { T } from './T';
 import { Presionable } from './Presionable';
-import { color } from './tokens';
-import { fmtGtq, fmtUsd, parseMonto } from '../core/format';
-import { useFx } from '../state/fx';
+import { color, font, radius, space } from './tokens';
 
 /**
- * Entrada de monto con mentalidad quetzal: escribís en GTQ o USD y siempre
- * ves la conversión. Reporta el valor en USD (la moneda del riel).
+ * Entrada de monto.
+ *
+ * El número es el protagonista de la pantalla, así que va grande y tabular. La
+ * conversión a la otra moneda se muestra en vivo debajo — nunca se le pide a la
+ * persona que adivine cuánto es en lo que ella usa todos los días.
  */
 export function EntradaMonto({
-  onUsd,
+  simbolo,
+  valor,
+  onCambio,
+  equivalente,
+  disponible,
+  onMaximo,
+  error,
   autoFoco = true,
-  inicialUsd,
 }: {
-  onUsd: (usd: number) => void;
+  /** "Q" o "$" */
+  simbolo: string;
+  valor: string;
+  onCambio: (v: string) => void;
+  /** Lo mismo, en la otra moneda. Ej: "≈ $ 13.10" */
+  equivalente?: string;
+  /** Texto de saldo disponible. Ej: "Disponible Q 500.00" */
+  disponible?: string;
+  onMaximo?: () => void;
+  error?: string | null;
   autoFoco?: boolean;
-  /** pre-llenado (p. ej. desde un QR escaneado); arranca en modo USD */
-  inicialUsd?: number;
 }) {
-  const rate = useFx((s) => s.rate);
-  const [texto, setTexto] = useState(() => (inicialUsd && inicialUsd > 0 ? inicialUsd.toFixed(2) : ''));
-  const [moneda, setMoneda] = useState<'GTQ' | 'USD'>(inicialUsd && inicialUsd > 0 ? 'USD' : 'GTQ');
-
-  const bruto = parseMonto(texto);
-  const usd = moneda === 'USD' ? bruto : rate > 0 ? bruto / rate : 0;
-
-  const cambiar = (v: string) => {
-    if (!/^[\d.,\s]*$/.test(v)) return;
-    setTexto(v);
-    const n = parseMonto(v);
-    onUsd(moneda === 'USD' ? n : rate > 0 ? n / rate : 0);
-  };
-
-  const alternar = () => {
-    const nueva = moneda === 'GTQ' ? 'USD' : 'GTQ';
-    // conserva el valor: convierte el texto actual a la otra moneda
-    if (bruto > 0) {
-      const convertido = nueva === 'USD' ? bruto / rate : bruto * rate;
-      setTexto(convertido.toFixed(2));
-    }
-    setMoneda(nueva);
-  };
+  function limpiar(texto: string) {
+    // Solo dígitos y un separador decimal; se acepta coma y se normaliza a punto.
+    const normalizado = texto.replace(',', '.').replace(/[^0-9.]/g, '');
+    const partes = normalizado.split('.');
+    const unido = partes.length > 2 ? `${partes[0]}.${partes.slice(1).join('')}` : normalizado;
+    // Máximo dos decimales para montos en moneda.
+    const [entera, decimal] = unido.split('.');
+    return decimal !== undefined ? `${entera}.${decimal.slice(0, 6)}` : entera;
+  }
 
   return (
     <View style={styles.raiz}>
-      <View style={styles.fila}>
-        <Mono size={30} weight="bold" color={color.plumaSuave}>
-          {moneda === 'GTQ' ? 'Q' : '$'}
-        </Mono>
+      <View style={styles.linea}>
+        <T v="saldoMayor" color={valor ? color.grafito : color.lapizTenue}>
+          {simbolo}
+        </T>
         <TextInput
-          value={texto}
-          onChangeText={cambiar}
+          value={valor}
+          onChangeText={(t) => onCambio(limpiar(t))}
           placeholder="0.00"
-          placeholderTextColor={color.plumaTenue}
+          placeholderTextColor={color.lapizTenue}
           keyboardType="decimal-pad"
           autoFocus={autoFoco}
-          accessibilityLabel={`Monto en ${moneda}`}
+          accessibilityLabel="Monto"
           style={[styles.input, { outlineStyle: 'none' } as object]}
-          maxLength={12}
         />
       </View>
-      <Presionable
-        onPress={alternar}
-        accessibilityRole="button"
-        accessibilityLabel={`Cambiar a ${moneda === 'GTQ' ? 'dólares' : 'quetzales'}`}
-        style={styles.toggle}
-      >
-        <ArrowUpDown size={13} color={color.jade} />
-        <T v="small" color={color.jade}>
-          {moneda === 'GTQ'
-            ? `≈ ${fmtUsd(usd)} USDC`
-            : `≈ ${fmtGtq(bruto * rate)} quetzales`}
+
+      {equivalente ? (
+        <T v="saldoMenor" style={styles.equivalente}>
+          {equivalente}
         </T>
-      </Presionable>
+      ) : null}
+
+      <View style={styles.pie}>
+        {disponible ? <T v="small">{disponible}</T> : <View />}
+        {onMaximo ? (
+          <Presionable
+            onPress={onMaximo}
+            accessibilityRole="button"
+            accessibilityLabel="Usar el máximo disponible"
+            style={styles.maximo}
+          >
+            <T v="small" color={color.tinta}>
+              Usar todo
+            </T>
+          </Presionable>
+        ) : null}
+      </View>
+
+      {error ? (
+        <T v="small" color={color.sale} accessibilityLiveRegion="polite">
+          {error}
+        </T>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  raiz: { alignItems: 'center', gap: 10 },
-  fila: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
+  raiz: { gap: space.s },
+  linea: { flexDirection: 'row', alignItems: 'baseline', gap: space.s },
   input: {
-    fontFamily: 'SpaceGrotesk_700Bold',
-    fontSize: 46,
-    letterSpacing: -1,
-    color: color.pluma,
-    minWidth: 140,
-    maxWidth: 250,
-    flexGrow: 0,
-    flexShrink: 1,
-    textAlign: 'center',
+    flex: 1,
+    fontFamily: font.cifraBold,
+    fontSize: 52,
+    letterSpacing: -1.5,
+    color: color.grafito,
     padding: 0,
+    fontVariant: ['tabular-nums'],
   },
-  toggle: {
+  equivalente: { marginTop: -space.xs },
+  pie: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: color.bordeJade,
-    backgroundColor: 'rgba(45,227,155,0.08)',
+    justifyContent: 'space-between',
+    marginTop: space.s,
+  },
+  maximo: {
+    paddingHorizontal: space.m,
+    paddingVertical: space.s,
+    borderRadius: radius.pill,
+    backgroundColor: color.tintaTenue,
   },
 });

@@ -43,7 +43,7 @@ export function Esqueleto({
   return (
     <Animated.View
       style={[
-        { width: ancho, height: alto, borderRadius: radio, backgroundColor: color.musgo },
+        { width: ancho, height: alto, borderRadius: radio, backgroundColor: color.papelHundido },
         anim,
         style,
       ]}

@@ -1,0 +1,66 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{12A19746-3ABF-4AFF-A58A-98BCC5BE656A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoExchangeGT.Domain", "src\CryptoExchangeGT.Domain\CryptoExchangeGT.Domain.csproj", "{894FEB2C-6E92-442D-921B-B9FCDBB4E7AB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoExchangeGT.Application", "src\CryptoExchangeGT.Application\CryptoExchangeGT.Application.csproj", "{2E92F247-AD0C-4ECD-902F-BEC138DF5E37}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoExchangeGT.Infrastructure", "src\CryptoExchangeGT.Infrastructure\CryptoExchangeGT.Infrastructure.csproj", "{42502FDE-4D9A-445F-A3D1-D726F19D3AF1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoExchangeGT.API", "src\CryptoExchangeGT.API\CryptoExchangeGT.API.csproj", "{011A3532-6172-462F-A348-9549C8CB0B7B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{FC4AE564-FE64-4A8D-85EE-F48828AC9284}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoExchangeGT.Tests", "tests\CryptoExchangeGT.Tests\CryptoExchangeGT.Tests.csproj", "{AB795707-5319-472A-B6D7-6B9F46132A9E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{0BA03EBE-E66B-4CE4-8118-11AC7B60B940}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoExchangeGT.Cifrador", "tools\CryptoExchangeGT.Cifrador\CryptoExchangeGT.Cifrador.csproj", "{238473FD-C0BC-4E28-9591-898E76E2FCA8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{894FEB2C-6E92-442D-921B-B9FCDBB4E7AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{894FEB2C-6E92-442D-921B-B9FCDBB4E7AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{894FEB2C-6E92-442D-921B-B9FCDBB4E7AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{894FEB2C-6E92-442D-921B-B9FCDBB4E7AB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2E92F247-AD0C-4ECD-902F-BEC138DF5E37}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E92F247-AD0C-4ECD-902F-BEC138DF5E37}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E92F247-AD0C-4ECD-902F-BEC138DF5E37}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E92F247-AD0C-4ECD-902F-BEC138DF5E37}.Release|Any CPU.Build.0 = Release|Any CPU
+		{42502FDE-4D9A-445F-A3D1-D726F19D3AF1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{42502FDE-4D9A-445F-A3D1-D726F19D3AF1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{42502FDE-4D9A-445F-A3D1-D726F19D3AF1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{42502FDE-4D9A-445F-A3D1-D726F19D3AF1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{011A3532-6172-462F-A348-9549C8CB0B7B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{011A3532-6172-462F-A348-9549C8CB0B7B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{011A3532-6172-462F-A348-9549C8CB0B7B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{011A3532-6172-462F-A348-9549C8CB0B7B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AB795707-5319-472A-B6D7-6B9F46132A9E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB795707-5319-472A-B6D7-6B9F46132A9E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB795707-5319-472A-B6D7-6B9F46132A9E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB795707-5319-472A-B6D7-6B9F46132A9E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{238473FD-C0BC-4E28-9591-898E76E2FCA8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{238473FD-C0BC-4E28-9591-898E76E2FCA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{238473FD-C0BC-4E28-9591-898E76E2FCA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{238473FD-C0BC-4E28-9591-898E76E2FCA8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{894FEB2C-6E92-442D-921B-B9FCDBB4E7AB} = {12A19746-3ABF-4AFF-A58A-98BCC5BE656A}
+		{2E92F247-AD0C-4ECD-902F-BEC138DF5E37} = {12A19746-3ABF-4AFF-A58A-98BCC5BE656A}
+		{42502FDE-4D9A-445F-A3D1-D726F19D3AF1} = {12A19746-3ABF-4AFF-A58A-98BCC5BE656A}
+		{011A3532-6172-462F-A348-9549C8CB0B7B} = {12A19746-3ABF-4AFF-A58A-98BCC5BE656A}
+		{AB795707-5319-472A-B6D7-6B9F46132A9E} = {FC4AE564-FE64-4A8D-85EE-F48828AC9284}
+		{238473FD-C0BC-4E28-9591-898E76E2FCA8} = {0BA03EBE-E66B-4CE4-8118-11AC7B60B940}
+	EndGlobalSection
+EndGlobal

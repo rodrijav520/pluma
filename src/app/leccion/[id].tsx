@@ -7,11 +7,11 @@ import { Check, X as XIcon, ArrowLeft } from 'lucide-react-native';
 import { soloNativo } from '../../ui/anim';
 import { Pantalla } from '../../ui/Pantalla';
 import { T } from '../../ui/T';
-import { Glass } from '../../ui/Glass';
+import { Hoja } from '../../ui/Hoja';
 import { Boton } from '../../ui/Boton';
 import { Pluma } from '../../ui/Pluma';
 import { Presionable } from '../../ui/Presionable';
-import { color, radius, space } from '../../ui/tokens';
+import { color, radius, space, TOQUE_MIN } from '../../ui/tokens';
 import { leccionPorId, NIVELES } from '../../content/lecciones';
 import { useLearn } from '../../state/learn';
 
@@ -31,7 +31,12 @@ export default function LeccionPlayer() {
     return (
       <Pantalla>
         <T v="h2">Esa lección no existe</T>
-        <Boton titulo="Volver" variante="secundario" onPress={() => router.back()} style={{ marginTop: 16 }} />
+        <Boton
+          titulo="Volver"
+          variante="secundario"
+          onPress={() => router.back()}
+          style={{ marginTop: space.l }}
+        />
       </Pantalla>
     );
   }
@@ -44,11 +49,11 @@ export default function LeccionPlayer() {
 
   const avanzar = () => {
     if (paso + 1 >= totalPasos) {
-      const total = leccion.quiz.length;
-      const finales = aciertos;
-      if (!yaHecha) completar(leccion.id, finales, total);
+      if (!yaHecha) completar(leccion.id, aciertos, leccion.quiz.length);
       setTerminada(true);
-      if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      if (Platform.OS !== 'web') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      }
     } else {
       setPaso((p) => p + 1);
       setSeleccion(null);
@@ -57,53 +62,64 @@ export default function LeccionPlayer() {
 
   if (terminada) {
     return (
-      <Pantalla scroll={false} style={{ justifyContent: 'center', alignItems: 'center', gap: space.l }}>
-        <Pluma alto={140} animada />
+      <Pantalla scroll={false} style={styles.fin}>
+        <Pluma alto={110} />
         <T v="h1" centrado>
-          {yaHecha ? '¡Repasada!' : '¡Ganaste una pluma!'}
+          {yaHecha ? 'Repasada' : 'Lección completada'}
         </T>
-        <T v="bodyLg" centrado style={{ maxWidth: 300 }}>
+        <T v="cuerpo" centrado style={styles.finTexto}>
           {aciertos} de {leccion.quiz.length} correctas en «{leccion.titulo}».
         </T>
-        <Boton
-          titulo="Seguir aprendiendo"
-          onPress={() => router.back()}
-          style={{ alignSelf: 'stretch', marginTop: space.l }}
-        />
+        <Boton titulo="Seguir aprendiendo" onPress={() => router.back()} style={styles.finBoton} />
       </Pantalla>
     );
   }
 
   return (
     <Pantalla scroll={false}>
-      <Presionable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Salir de la lección" style={styles.volver}>
-        <ArrowLeft size={20} color={color.plumaSuave} />
-        <T v="small">
+      <Presionable
+        onPress={() => router.back()}
+        accessibilityRole="button"
+        accessibilityLabel="Salir de la lección"
+        style={styles.volver}
+      >
+        <ArrowLeft size={20} color={color.lapiz} />
+        <T v="small" numberOfLines={1} style={{ flex: 1 }}>
           Nivel {NIVELES[leccion.nivel].nombre} · {leccion.titulo}
         </T>
       </Presionable>
 
-      {/* Barra de progreso */}
-      <View style={styles.barra}>
+      <View
+        style={styles.barra}
+        accessibilityRole="progressbar"
+        accessibilityValue={{ min: 0, max: totalPasos, now: paso }}
+      >
         <View style={[styles.barraLlena, { width: `${Math.max(progreso * 100, 4)}%` }]} />
       </View>
 
-      <View style={{ flex: 1, justifyContent: 'center' }}>
+      <View style={styles.cuerpo}>
         {!enQuiz ? (
           <Animated.View key={paso} entering={soloNativo(FadeInRight.duration(260))}>
-            <Glass style={styles.carta}>
-              <T v="eyebrow">
+            <Hoja style={styles.carta}>
+              <T v="etiqueta">
                 {paso + 1} / {leccion.cartas.length}
               </T>
-              <T v="bodyLg" style={{ fontSize: 18, lineHeight: 28, color: color.pluma }}>
+              <T v="cuerpo" style={styles.cartaTexto}>
                 {leccion.cartas[paso]}
               </T>
-            </Glass>
+            </Hoja>
           </Animated.View>
         ) : pregunta ? (
-          <Animated.View key={paso} entering={soloNativo(FadeInRight.duration(260))} style={{ gap: space.l }}>
-            <T v="eyebrow">Pregunta {preguntaIdx + 1} de {leccion.quiz.length}</T>
+          <Animated.View
+            key={paso}
+            entering={soloNativo(FadeInRight.duration(260))}
+            style={{ gap: space.l }}
+          >
+            <T v="etiqueta">
+              Pregunta {preguntaIdx + 1} de {leccion.quiz.length}
+            </T>
             <T v="h2">{pregunta.pregunta}</T>
+
             <View style={{ gap: 10 }}>
               {pregunta.opciones.map((op, i) => {
                 const elegida = seleccion === i;
@@ -118,9 +134,10 @@ export default function LeccionPlayer() {
                       const acerto = i === pregunta.correcta;
                       if (acerto) setAciertos((a) => a + 1);
                       if (Platform.OS !== 'web') {
-                        (acerto
-                          ? Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-                          : Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
+                        Haptics.notificationAsync(
+                          acerto
+                            ? Haptics.NotificationFeedbackType.Success
+                            : Haptics.NotificationFeedbackType.Error,
                         ).catch(() => {});
                       }
                     }}
@@ -133,27 +150,38 @@ export default function LeccionPlayer() {
                     ]}
                   >
                     <T
-                      v="bodyStrong"
+                      v="cuerpoFuerte"
                       style={{ flex: 1 }}
-                      color={revelada && esCorrecta ? color.jade : revelada && elegida ? color.pecho : color.pluma}
+                      color={
+                        revelada && esCorrecta
+                          ? color.entra
+                          : revelada && elegida
+                            ? color.sale
+                            : color.grafito
+                      }
                     >
                       {op}
                     </T>
-                    {revelada && esCorrecta && <Check size={18} color={color.jade} strokeWidth={2.5} />}
-                    {revelada && elegida && !esCorrecta && <XIcon size={18} color={color.pecho} strokeWidth={2.5} />}
+                    {revelada && esCorrecta ? (
+                      <Check size={18} color={color.entra} strokeWidth={2.5} />
+                    ) : null}
+                    {revelada && elegida && !esCorrecta ? (
+                      <XIcon size={18} color={color.sale} strokeWidth={2.5} />
+                    ) : null}
                   </Presionable>
                 );
               })}
             </View>
-            {seleccion != null && (
+
+            {seleccion != null ? (
               <Animated.View entering={soloNativo(FadeInDown.duration(240))}>
-                <Glass radio={radius.m} relleno="rgba(45,227,155,0.06)" style={{ padding: space.m }}>
-                  <T v="body" color={color.pluma}>
+                <Hoja plana relleno={color.tintaTenue} radio={radius.m}>
+                  <T v="cuerpo" color={color.grafito}>
                     {pregunta.porQue}
                   </T>
-                </Glass>
+                </Hoja>
               </Animated.View>
-            )}
+            ) : null}
           </Animated.View>
         ) : null}
       </View>
@@ -176,26 +204,37 @@ export default function LeccionPlayer() {
 }
 
 const styles = StyleSheet.create({
-  volver: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start' },
+  volver: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.s,
+    minHeight: TOQUE_MIN,
+  },
   barra: {
     height: 4,
     borderRadius: 2,
-    backgroundColor: color.musgo,
-    marginTop: space.m,
+    backgroundColor: color.papelHundido,
+    marginTop: space.s,
     overflow: 'hidden',
   },
-  barraLlena: { height: '100%', borderRadius: 2, backgroundColor: color.jade },
+  barraLlena: { height: '100%', borderRadius: 2, backgroundColor: color.tinta },
+  cuerpo: { flex: 1, justifyContent: 'center' },
   carta: { padding: space.xl, gap: space.m },
+  cartaTexto: { fontSize: 18, lineHeight: 28, color: color.grafito },
   opcion: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
     padding: space.l,
+    minHeight: TOQUE_MIN,
     borderRadius: radius.m,
     borderWidth: 1,
-    borderColor: color.borde,
-    backgroundColor: 'rgba(236,253,245,0.04)',
+    borderColor: color.trazo,
+    backgroundColor: color.papelAlto,
   },
-  opcionCorrecta: { borderColor: color.jade, backgroundColor: 'rgba(45,227,155,0.10)' },
-  opcionMala: { borderColor: color.pecho, backgroundColor: 'rgba(255,77,94,0.08)' },
+  opcionCorrecta: { borderColor: color.entra, backgroundColor: color.entraTenue },
+  opcionMala: { borderColor: color.sale, backgroundColor: color.saleTenue },
+  fin: { justifyContent: 'center', alignItems: 'center', gap: space.l },
+  finTexto: { maxWidth: 300 },
+  finBoton: { alignSelf: 'stretch', marginTop: space.l },
 });

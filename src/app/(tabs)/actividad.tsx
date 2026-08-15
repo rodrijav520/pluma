@@ -1,127 +1,133 @@
-import React, { useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { router } from 'expo-router';
+import { Receipt } from 'lucide-react-native';
 import { Pantalla } from '../../ui/Pantalla';
+import { Hoja } from '../../ui/Hoja';
 import { T } from '../../ui/T';
-import { Glass } from '../../ui/Glass';
-import { Presionable } from '../../ui/Presionable';
-import { EstadoVacio } from '../../ui/EstadoVacio';
-import { Esqueleto } from '../../ui/Esqueleto';
 import { FilaTx } from '../../ui/FilaTx';
-import { color, radius, space } from '../../ui/tokens';
-import { useChain } from '../../state/chain';
-import { useFx } from '../../state/fx';
-import { fmtDia } from '../../core/format';
+import { Aviso } from '../../ui/Avisos';
+import { Boton } from '../../ui/Boton';
+import { Esqueleto } from '../../ui/Esqueleto';
+import { EstadoVacio } from '../../ui/EstadoVacio';
+import { api, ErrorApi, type TransaccionResponse } from '../../core/api';
+import { useSesion } from '../../state/sesion';
+import { color, space } from '../../ui/tokens';
 
-const FILTROS = [
-  { id: 'todo', etiqueta: 'Todo' },
-  { id: 'in', etiqueta: 'Recibido' },
-  { id: 'out', etiqueta: 'Enviado' },
-] as const;
+const POR_PAGINA = 20;
 
 export default function Actividad() {
-  const router = useRouter();
-  const { txs, cargando, actualizado } = useChain();
-  const rate = useFx((s) => s.rate);
-  const [filtro, setFiltro] = useState<(typeof FILTROS)[number]['id']>('todo');
+  const salir = useSesion((s) => s.salir);
 
-  const filtradas = useMemo(
-    () => (filtro === 'todo' ? txs : txs.filter((t) => t.dir === filtro)),
-    [txs, filtro],
+  const [items, setItems] = useState<TransaccionResponse[]>([]);
+  const [pagina, setPagina] = useState(1);
+  const [totalPaginas, setTotalPaginas] = useState(1);
+  const [cargando, setCargando] = useState(true);
+  const [cargandoMas, setCargandoMas] = useState(false);
+  const [refrescando, setRefrescando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const cargar = useCallback(
+    async (p: number, modo: 'inicial' | 'refresco' | 'mas') => {
+      const token = useSesion.getState().tokenVigente();
+      if (!token) {
+        await salir();
+        return;
+      }
+
+      if (modo === 'inicial') setCargando(true);
+      if (modo === 'refresco') setRefrescando(true);
+      if (modo === 'mas') setCargandoMas(true);
+      setError(null);
+
+      try {
+        const r = await api.historial(token, p, POR_PAGINA);
+        setItems((prev) => (modo === 'mas' ? [...prev, ...r.transacciones] : r.transacciones));
+        setPagina(r.pagina);
+        setTotalPaginas(Math.max(r.totalPaginas, 1));
+      } catch (e) {
+        if (e instanceof ErrorApi && e.esSesionVencida) {
+          await salir();
+          return;
+        }
+        setError(e instanceof ErrorApi ? e.message : 'No se pudo cargar tu actividad.');
+      } finally {
+        setCargando(false);
+        setRefrescando(false);
+        setCargandoMas(false);
+      }
+    },
+    [salir],
   );
 
-  const grupos = useMemo(() => {
-    const g: { dia: string; items: typeof filtradas }[] = [];
-    for (const tx of filtradas) {
-      const dia = fmtDia(tx.ts);
-      const ultimo = g.at(-1);
-      if (ultimo && ultimo.dia === dia) ultimo.items.push(tx);
-      else g.push({ dia, items: [tx] });
-    }
-    return g;
-  }, [filtradas]);
+  useEffect(() => {
+    cargar(1, 'inicial');
+  }, [cargar]);
+
+  const hayMas = pagina < totalPaginas;
 
   return (
-    <Pantalla pieEspacio={110}>
-      <T v="h1" style={{ marginBottom: space.l }}>
+    <Pantalla
+      refrescando={refrescando}
+      onRefrescar={() => cargar(1, 'refresco')}
+      pieEspacio={110}
+    >
+      <T v="h1" style={styles.titulo}>
         Actividad
       </T>
 
-      <View style={styles.filtros}>
-        {FILTROS.map((f) => {
-          const activa = filtro === f.id;
-          return (
-            <Presionable
-              key={f.id}
-              onPress={() => setFiltro(f.id)}
-              accessibilityRole="button"
-              accessibilityState={{ selected: activa }}
-              style={[styles.filtro, activa && styles.filtroActivo]}
-            >
-              <T v="bodyStrong" style={{ fontSize: 13 }} color={activa ? color.sobreJade : color.plumaSuave}>
-                {f.etiqueta}
-              </T>
-            </Presionable>
-          );
-        })}
-      </View>
+      {error ? <Aviso tono="error" texto={error} /> : null}
 
-      {actualizado == null && cargando ? (
-        <View style={{ gap: 14, marginTop: space.l }}>
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Esqueleto key={i} alto={56} />
+      {cargando ? (
+        <View style={{ gap: space.m }}>
+          {[0, 1, 2, 3].map((i) => (
+            <Esqueleto key={i} alto={64} />
           ))}
         </View>
-      ) : filtradas.length === 0 ? (
+      ) : items.length === 0 ? (
         <EstadoVacio
-          titulo={filtro === 'todo' ? 'Todavía no hay movimientos' : 'Nada por aquí'}
-          detalle={
-            filtro === 'todo'
-              ? 'Cuando cobrés o envíes dólares digitales, todo queda registrado aquí con su equivalente en quetzales.'
-              : 'Con otro filtro seguro aparece algo.'
-          }
-          accion={filtro === 'todo' ? 'Crear un cobro' : undefined}
-          onAccion={filtro === 'todo' ? () => router.push('/cobrar') : undefined}
+          icono={<Receipt size={28} color={color.lapiz} strokeWidth={1.8} />}
+          titulo="Todavía no hay movimientos"
+          texto="Acá vas a ver cada compra, cambio y envío, con lo que entra y lo que sale en las dos monedas."
+          accion={{ titulo: 'Comprar con quetzales', onPress: () => router.push('/comprar') }}
         />
       ) : (
-        <Glass style={{ paddingHorizontal: space.l, paddingVertical: 4, marginTop: space.l }}>
-          {grupos.map((g, gi) => (
-            <View key={g.dia}>
-              <T v="small" style={{ marginTop: 12, marginBottom: 2 }}>
-                {g.dia}
-              </T>
-              {g.items.map((tx) => (
-                <FilaTx
-                  key={tx.hash}
-                  tx={tx}
-                  rate={rate}
-                  onPress={() => router.push({ pathname: '/tx/[hash]', params: { hash: tx.hash } })}
-                />
-              ))}
-              {gi < grupos.length - 1 && <View style={styles.separador} />}
-            </View>
-          ))}
-        </Glass>
+        <>
+          <Hoja style={styles.lista}>
+            {items.map((tx, i) => (
+              <View key={tx.id}>
+                {i > 0 ? <View style={styles.divisor} /> : null}
+                <FilaTx tx={tx} />
+              </View>
+            ))}
+          </Hoja>
+
+          {hayMas ? (
+            cargandoMas ? (
+              <ActivityIndicator color={color.tinta} style={styles.mas} />
+            ) : (
+              <Boton
+                titulo="Ver más"
+                variante="secundario"
+                onPress={() => cargar(pagina + 1, 'mas')}
+                style={styles.mas}
+              />
+            )
+          ) : (
+            <T v="small" centrado style={styles.fin}>
+              No hay más movimientos.
+            </T>
+          )}
+        </>
       )}
     </Pantalla>
   );
 }
 
 const styles = StyleSheet.create({
-  filtros: { flexDirection: 'row', gap: 8 },
-  filtro: {
-    paddingHorizontal: 16,
-    height: 38,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: color.borde,
-    backgroundColor: 'rgba(236,253,245,0.04)',
-  },
-  filtroActivo: {
-    backgroundColor: color.jade,
-    borderColor: color.jade,
-  },
-  separador: { height: 1, backgroundColor: color.borde, marginVertical: 6 },
+  titulo: { marginBottom: space.l },
+  lista: { paddingVertical: space.xs },
+  divisor: { height: 1, backgroundColor: color.trazo },
+  mas: { marginTop: space.l },
+  fin: { marginTop: space.l },
 });
