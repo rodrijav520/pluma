@@ -42,8 +42,54 @@ export const color = {
   marigold: '#F2A93B',
   marigoldTenue: 'rgba(242,169,59,0.18)',
 
+  // Identidad de cada activo. Son colores de DATO: cada uno nombra una cosa
+  // concreta, no decoran. El quetzal es verde jade; el dólar digital, el teal
+  // de Tether.
+  quetzal: '#12A594',
+  quetzalTenue: 'rgba(18,165,148,0.14)',
+  dolar: '#3B82F6',
+  dolarTenue: 'rgba(59,130,246,0.14)',
+
+  // Sobre el degradado del encabezado el texto es claro.
+  //
+  // Las opacidades no son estéticas, salen del contraste medido contra los dos
+  // extremos del degradado: a 0.46 la etiqueta de 11 px daba 3.43:1 y no pasaba
+  // AA. A 0.62 da 4.93:1 sobre el extremo oscuro y 4.6:1 sobre el claro.
+  sobreDegradado: '#FFFFFF',
+  sobreDegradadoSuave: 'rgba(255,255,255,0.78)',
+  sobreDegradadoTenue: 'rgba(255,255,255,0.62)',
+  vidrioClaro: 'rgba(255,255,255,0.16)',
+  vidrioClaroBorde: 'rgba(255,255,255,0.28)',
+
   overlay: 'rgba(20,24,33,0.45)',
 } as const;
+
+/**
+ * Degradados. El de marca va índigo → violeta: la tinta no es plana, se
+ * profundiza. Se usa en el encabezado de inicio y en nada más, para que siga
+ * significando "acá está tu dinero".
+ */
+export const degradado = {
+  // El extremo claro se oscureció de #6D3FA0 a #5A3490: con el anterior, las
+  // etiquetas de 12 px de las acciones quedaban en 4.45:1, apenas por debajo
+  // del mínimo AA.
+  marca: ['#2B3A8F', '#43349C', '#5A3490'] as const,
+  marcaSuave: ['rgba(43,58,143,0.10)', 'rgba(109,63,160,0.04)'] as const,
+  quetzal: ['#12A594', '#0E8C7E'] as const,
+  dolar: ['#3B82F6', '#2563EB'] as const,
+  /** Acción destacada sobre el degradado: papel, para que resalte contra el vidrio. */
+  destacado: ['#FFFFFF', '#EEF1FF'] as const,
+} as const;
+
+/** Paleta para avatares por inicial. Estable: la misma persona, el mismo color. */
+export const AVATAR_TONOS = [
+  ['#2B3A8F', '#6D3FA0'],
+  ['#12A594', '#0E8C7E'],
+  ['#D9563F', '#B23A28'],
+  ['#3B82F6', '#2563EB'],
+  ['#B4770E', '#8A5A0A'],
+  ['#7C3AED', '#5B21B6'],
+] as const;
 
 export const space = {
   xs: 4,

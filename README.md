@@ -124,13 +124,18 @@ error claro y el saldo del usuario no se mueve.
 
 ## Créditos
 
-El backend **CryptoExchangeGT** fue desarrollado por
-[@rodrijav520](https://github.com/rodrijav520), a partir de una revisión de
-seguridad que encontró y corrigió 12 hallazgos —dos de ellos críticos— sobre el
-proyecto original. El detalle está en [`backend/ANALISIS.md`](backend/ANALISIS.md)
-y [`backend/CAMBIOS.md`](backend/CAMBIOS.md).
+**Backend — [@dummy2004](https://github.com/dummy2004).** `CryptoExchangeGT` es
+suyo: la arquitectura en capas, el dominio, los casos de uso y la integración con
+Nethereum. Esa base es la que hace posible la conversión a quetzales.
 
-La app móvil y la integración se construyeron sobre ese trabajo.
+**Correcciones de seguridad sobre el backend — [@rodrijav520](https://github.com/rodrijav520).**
+Una revisión que encontró y corrigió 12 hallazgos, dos de ellos críticos: llaves
+expuestas, depósito sin pago, falta de reversa, carrera en los saldos. El detalle
+está en [`backend/ANALISIS.md`](backend/ANALISIS.md) y
+[`backend/CAMBIOS.md`](backend/CAMBIOS.md).
+
+**App móvil e integración — [@rodrijav520](https://github.com/rodrijav520).**
+La app Expo, el sistema de diseño "Tinta y papel" y el cliente de API.
 
 La versión anterior de Pluma —no custodial, con frase semilla y llaves en el
 teléfono— se conserva en la rama [`no-custodial`](../../tree/no-custodial) y en el
