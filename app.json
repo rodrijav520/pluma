@@ -1,22 +1,31 @@
 {
   "expo": {
-    "name": "Wallet",
-    "slug": "Wallet",
+    "name": "Pluma",
+    "slug": "pluma",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "wallet",
-    "userInterfaceStyle": "automatic",
+    "scheme": "pluma",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0B1210",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/images/icon.png",
+      "bundleIdentifier": "gt.pluma.app",
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Pluma usa la cámara únicamente para escanear códigos QR de pago.",
+        "NSFaceIDUsageDescription": "Pluma usa Face ID para proteger tus envíos y tu frase semilla."
+      }
     },
     "android": {
+      "package": "gt.pluma.app",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#0B1210",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
+      "permissions": ["android.permission.CAMERA", "android.permission.USE_BIOMETRIC"],
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -28,9 +37,22 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#0B1210",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 96
+        }
+      ],
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Pluma usa la cámara únicamente para escanear códigos QR de pago."
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Pluma usa Face ID para proteger tus envíos y tu frase semilla."
         }
       ]
     ],
