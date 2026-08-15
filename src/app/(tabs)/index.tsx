@@ -95,17 +95,17 @@ function TasaHonesta({ tasa }: { tasa: number }) {
 
   return (
     <Hoja style={styles.tasa}>
-      <View style={styles.tasaFila}>
-        <T v="etiqueta">Tasa que estás recibiendo</T>
-        <T v="dato">1 USD = {quetzales(tasa)}</T>
-      </View>
+      {/* La tasa va en su propia línea: es el dato que el producto promete
+          mostrar sin letra chica, así que no compite por ancho con su etiqueta. */}
+      <T v="etiqueta">Tasa que estás recibiendo</T>
+      <T v="datoDestacado" numberOfLines={1} style={styles.tasaValor}>
+        1 USD = {quetzales(tasa)}
+      </T>
       <View style={styles.tasaDivisor} />
-      <View style={styles.tasaFila}>
-        <T v="small" style={{ flex: 1 }}>
-          Con el margen que suele cobrar un banco (2%–5%), ese mismo dólar te quedaría cerca de{' '}
-          {quetzales(conMargen)}.
-        </T>
-      </View>
+      <T v="small">
+        Con el margen que suele cobrar un banco (2%–5%), ese mismo dólar te quedaría cerca de{' '}
+        {quetzales(conMargen)}.
+      </T>
     </Hoja>
   );
 }
@@ -160,9 +160,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: space.l,
   },
-  tasa: { marginTop: space.l, gap: space.m },
-  tasaFila: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.m },
-  tasaDivisor: { height: 1, backgroundColor: color.trazo },
+  tasa: { marginTop: space.l, gap: space.s },
+  tasaValor: { marginTop: 2 },
+  tasaDivisor: { height: 1, backgroundColor: color.trazo, marginVertical: space.xs },
   acciones: {
     flexDirection: 'row',
     justifyContent: 'space-around',

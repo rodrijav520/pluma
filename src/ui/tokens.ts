@@ -100,6 +100,18 @@ export const type = {
   h2: { fontFamily: font.vozMed, fontSize: 20, letterSpacing: -0.3, color: color.grafito },
 
   // Cifra — Inter
+  /**
+   * Dato con presencia de título. Existe porque una línea como "1 USD = Q 7.63"
+   * es una cifra, no una voz: en Bricolage la cola de la Q se lee como subrayado
+   * y además rompería la regla del sistema.
+   */
+  datoDestacado: {
+    fontFamily: font.cifraSemi,
+    fontSize: 21,
+    letterSpacing: -0.3,
+    color: color.grafito,
+    ...tabular,
+  },
   cuerpo: { fontFamily: font.cifra, fontSize: 15, lineHeight: 22, color: color.lapiz },
   cuerpoFuerte: { fontFamily: font.cifraSemi, fontSize: 15, lineHeight: 22, color: color.grafito },
   dato: { fontFamily: font.cifraSemi, fontSize: 15, color: color.grafito, ...tabular },

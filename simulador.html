@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pluma — Simulador móvil</title>
+<style>
+  :root {
+    --fondo: #14161c;
+    --fondo2: #1c1f27;
+    --texto: #e8eaf0;
+    --tenue: #9aa2b4;
+    --linea: rgba(255,255,255,0.12);
+    --tinta: #6b7cf0;
+    --marigold: #f2a93b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: radial-gradient(1200px 700px at 20% -10%, #232735, var(--fondo));
+    color: var(--texto);
+    font: 15px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 28px 20px 48px;
+    gap: 22px;
+  }
+  header { text-align: center; max-width: 640px; }
+  h1 { margin: 0 0 6px; font-size: 22px; letter-spacing: -0.3px; }
+  .sub { margin: 0; color: var(--tenue); font-size: 14px; }
+
+  .credenciales {
+    display: inline-flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+    margin-top: 12px;
+  }
+  .chip {
+    background: var(--fondo2); border: 1px solid var(--linea);
+    border-radius: 999px; padding: 5px 12px; font-size: 12.5px;
+    font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+    color: var(--texto);
+  }
+  .chip b { color: var(--marigold); font-weight: 600; }
+
+  nav { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 720px; }
+  nav button {
+    background: var(--fondo2); color: var(--texto);
+    border: 1px solid var(--linea); border-radius: 999px;
+    padding: 8px 15px; font-size: 13px; cursor: pointer;
+    transition: background .15s, border-color .15s, transform .1s;
+  }
+  nav button:hover { background: #262a35; border-color: rgba(255,255,255,0.22); }
+  nav button:active { transform: scale(0.97); }
+  nav button[aria-current="true"] { background: var(--tinta); border-color: var(--tinta); color: #fff; }
+
+  .escena { display: flex; align-items: flex-start; gap: 26px; flex-wrap: wrap; justify-content: center; }
+
+  /* Marco de teléfono: 375×812 (iPhone X/11/12/13/14) */
+  .telefono {
+    position: relative;
+    width: 401px; height: 838px;
+    background: #0a0b0e;
+    border-radius: 54px;
+    padding: 13px;
+    box-shadow:
+      0 0 0 2px #2a2e39,
+      0 40px 80px rgba(0,0,0,0.55),
+      inset 0 0 0 1px rgba(255,255,255,0.06);
+    flex: 0 0 auto;
+  }
+  .pantalla {
+    position: relative;
+    width: 375px; height: 812px;
+    border-radius: 42px;
+    overflow: hidden;
+    background: #f2f4f7;
+  }
+  .pantalla iframe { width: 375px; height: 812px; border: 0; display: block; }
+
+  /* Muesca */
+  .muesca {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 148px; height: 27px; background: #0a0b0e;
+    border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;
+    z-index: 5; pointer-events: none;
+  }
+  /* Barra de gestos */
+  .gesto {
+    position: absolute; bottom: 7px; left: 50%; transform: translateX(-50%);
+    width: 128px; height: 4px; border-radius: 2px;
+    background: rgba(20,24,33,0.28); z-index: 5; pointer-events: none;
+  }
+
+  .lateral { max-width: 260px; font-size: 13.5px; color: var(--tenue); }
+  .lateral h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--texto); margin: 0 0 10px; }
+  .lateral ol { margin: 0; padding-left: 18px; }
+  .lateral li { margin-bottom: 9px; }
+  .lateral code {
+    background: var(--fondo2); border: 1px solid var(--linea);
+    border-radius: 5px; padding: 1px 5px; font-size: 12.5px;
+  }
+  .aviso {
+    margin-top: 16px; padding: 11px 13px;
+    background: rgba(242,169,59,0.10); border: 1px solid rgba(242,169,59,0.32);
+    border-radius: 10px; color: #f0d9ae; font-size: 12.5px;
+  }
+  .caido {
+    display: none; padding: 14px 16px; border-radius: 12px;
+    background: rgba(214,69,96,0.12); border: 1px solid rgba(214,69,96,0.4);
+    color: #f3c2cb; max-width: 560px; text-align: center; font-size: 13.5px;
+  }
+  .caido code { background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 5px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Pluma — simulador móvil</h1>
+  <p class="sub">La app real corriendo en <code>localhost:8081</code>, dentro de una pantalla de 375×812.</p>
+  <div class="credenciales">
+    <span class="chip">correo <b>ana@demo.gt</b></span>
+    <span class="chip">contraseña <b>Quetzal2026seguro</b></span>
+  </div>
+</header>
+
+<div class="caido" id="caido">
+  No se pudo cargar <code>http://localhost:8081</code>. Levantá el servidor con
+  <code>npx expo start</code> en la carpeta del proyecto y recargá esta página.
+</div>
+
+<nav id="rutas"></nav>
+
+<div class="escena">
+  <div class="telefono">
+    <div class="muesca"></div>
+    <div class="pantalla">
+      <iframe id="app" src="http://localhost:8081/bienvenida" title="Pluma"></iframe>
+    </div>
+    <div class="gesto"></div>
+  </div>
+
+  <aside class="lateral">
+    <h2>Cómo recorrerla</h2>
+    <ol>
+      <li>Empezá en <b>Bienvenida</b> y entrá con las credenciales de arriba.</li>
+      <li><b>Inicio</b> muestra el saldo en las dos monedas con la tasa en vivo del backend.</li>
+      <li><b>Cambiar</b> tiene la pieza firma: deslizá la pluma para confirmar.</li>
+      <li><b>Actividad</b> lista los movimientos con las dos monedas en cada fila.</li>
+    </ol>
+    <div class="aviso">
+      Comprar, cambiar y enviar devuelven un error claro: la wallet de tesorería
+      todavía no tiene fondos de testnet. El saldo del usuario nunca se mueve.
+    </div>
+  </aside>
+</div>
+
+<script>
+  const RUTAS = [
+    ['Bienvenida', '/bienvenida'],
+    ['Crear cuenta', '/crear-cuenta'],
+    ['Entrar', '/entrar'],
+    ['Inicio', '/'],
+    ['Cambiar', '/cambiar'],
+    ['Comprar', '/comprar'],
+    ['Enviar', '/enviar'],
+    ['Recibir', '/recibir'],
+    ['Actividad', '/actividad'],
+    ['Aprender', '/aprender'],
+    ['Ajustes', '/ajustes'],
+  ];
+
+  const BASE = 'http://localhost:8081';
+  const nav = document.getElementById('rutas');
+  const marco = document.getElementById('app');
+
+  RUTAS.forEach(([nombre, ruta], i) => {
+    const b = document.createElement('button');
+    b.textContent = nombre;
+    b.setAttribute('aria-current', i === 0 ? 'true' : 'false');
+    b.addEventListener('click', () => {
+      marco.src = BASE + ruta;
+      nav.querySelectorAll('button').forEach((x) => x.setAttribute('aria-current', 'false'));
+      b.setAttribute('aria-current', 'true');
+    });
+    nav.appendChild(b);
+  });
+
+  // Si el servidor no responde, decirlo en vez de mostrar un marco en blanco.
+  fetch(BASE, { mode: 'no-cors' }).catch(() => {
+    document.getElementById('caido').style.display = 'block';
+  });
+</script>
+
+</body>
+</html>

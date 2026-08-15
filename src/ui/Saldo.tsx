@@ -55,7 +55,11 @@ export function Saldo({
 function Parte({ etiqueta, valor, aviso }: { etiqueta: string; valor: string; aviso?: string }) {
   return (
     <View style={styles.parte}>
-      <T v="etiqueta">{etiqueta}</T>
+      {/* Alto fijo: una etiqueta de dos líneas junto a otra de una desalinearía
+          los montos, que es justo lo que la persona viene a comparar. */}
+      <T v="etiqueta" style={styles.parteEtiqueta}>
+        {etiqueta}
+      </T>
       <T v="dato" style={styles.parteValor}>
         {valor}
       </T>
@@ -81,6 +85,7 @@ const styles = StyleSheet.create({
     borderTopColor: color.trazo,
   },
   parte: { flex: 1, gap: space.xs },
+  parteEtiqueta: { minHeight: 28 },
   parteValor: { marginTop: 2 },
   separador: {
     width: 1,

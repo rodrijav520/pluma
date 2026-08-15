@@ -1,6 +1,6 @@
 import 'react-native-get-random-values';
 import React, { useEffect } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -26,6 +26,9 @@ import { Pantalla } from '../ui/Pantalla';
 import { useSesion } from '../state/sesion';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
+
+/** Operaciones de dinero: hoja modal en el teléfono, pantalla normal en web. */
+const hoja = Platform.OS === 'web' ? {} : ({ presentation: 'modal' } as const);
 
 /** Error global: dice qué pasó y da una salida. No pide disculpas. */
 export function ErrorBoundary({ error, retry }: { error: Error; retry: () => Promise<void> }) {
@@ -89,10 +92,12 @@ export default function RootLayout() {
             <Stack.Screen name="entrar" />
             <Stack.Screen name="crear-cuenta" />
             <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
-            <Stack.Screen name="comprar" options={{ presentation: 'modal' }} />
-            <Stack.Screen name="cambiar" options={{ presentation: 'modal' }} />
-            <Stack.Screen name="enviar" options={{ presentation: 'modal' }} />
-            <Stack.Screen name="recibir" options={{ presentation: 'modal' }} />
+            {/* En web la presentación modal se dibuja desplazada porque no hay
+                semántica nativa de modal; ahí van como pantalla normal. */}
+            <Stack.Screen name="comprar" options={hoja} />
+            <Stack.Screen name="cambiar" options={hoja} />
+            <Stack.Screen name="enviar" options={hoja} />
+            <Stack.Screen name="recibir" options={hoja} />
           </Stack>
           <Avisos />
         </View>
